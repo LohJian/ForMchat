@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, flash 
 from flask_sqlalchemy import SQLAlchemy 
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash,check_password_hash
 import os
 
 app = Flask(__name__)
@@ -38,7 +38,8 @@ def register():
             flash('Email already registered.')
             return redirect('/register')
 
-        new_user =User(username=username, email=email, password=password)
+        hashed_password = generate_password_hash(password)
+        new_user =User(username=username, email=email, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
 
