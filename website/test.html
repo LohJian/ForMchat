@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ForMchat – MMU Dating App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #222;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    .mmu-logo {
+      width: 100px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #003366;
+      margin-bottom: 10px;
+    }
+
+    .tagline {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .btn {
+      background: #003366;
+      color: white;
+      padding: 14px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .btn:hover {
+      background: #002244;
+      transform: scale(1.02);
+    }
+
+    footer {
+      margin-top: 30px;
+      font-size: 0.9rem;
+      color: #888;
+    }
+
+    @media (min-width: 500px) {
+      .button-group {
+        flex-direction: row;
+        justify-content: center;
+      }
+
+      .btn {
+        width: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Replace the src with actual MMU logo if you have -->
+    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/f/f1/Multimedia_University_%28Malaysia%29_logo.svg/800px-Multimedia_University_%28Malaysia%29_logo.svg.png" alt="MMU Logo" class="mmu-logo">
+
+    <h1>Welcome to ForMchat</h1>
+    <p class="tagline">Your campus-exclusive dating platform – made for MMU students.</p>
+
+    <div class="button-group">
+      <a href="/register" class="btn">Register</a>
+      <a href="/login" class="btn">Login</a>
+    </div>
+  </div>
+
+  <footer>
+    © 2025 ForMchat | Powered by MMU Students 💙
+  </footer>
+</body>
+</html>
+

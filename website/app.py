@@ -33,7 +33,7 @@ def send_verification_email(to_email):
         <p>Hello,</p>
         <p>Thanks for registering with ForMchat!</p>
         <p>
-          <a href="{verification_link}" style="padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">
+          <a href="{verification_link}" style="padding: 10px 20px; background-color: #ff99ac; color: white; text-decoration: none; border-radius: 5px;">
             Click here to verify your email
           </a>
         </p>
@@ -59,7 +59,7 @@ def send_verification_email(to_email):
     
 @app.route('/')
 def home():
-    return redirect('/register')
+    return render_template('home.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -89,6 +89,26 @@ def register():
 
     return render_template('register.html')
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+
+        user = User.query.filter_by(email=email).first()
+
+        if user and check_password_hash(user.password, password):
+            if user.is_verified:
+                flash('Login successful! Welcome back.')
+                return redirect('/dashboard')
+        else:
+            flash('Please verify your email before logging in.')
+
+    else:
+             flash('Invalid email  or password.')
+
+    return render_template('login.html')
+
 @app.route('/verify')
 def verify_email():
     email = request.args.get('email')
@@ -102,6 +122,10 @@ def verify_email():
         flash('Verification failed. Email not found.')
 
     return redirect('/register')    
+
+@app.route('/dashboard')
+def dashboard():
+    return "<h1>Welcome to your dashboard!</h1>"
  
 if __name__ == '__main__':
     app.run(debug=True)
