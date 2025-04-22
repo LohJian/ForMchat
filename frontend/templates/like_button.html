@@ -1,0 +1,6 @@
+<button class="action-btn like-btn" 
+        {% if session.liked %}disabled{% endif %}
+        {% if not session.liked %}hx-post="/like/{{ user.id }}"{% endif %}
+        hx-swap="outerHTML">
+    👍 {{ user.likes }}
+</button>

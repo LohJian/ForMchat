@@ -1,0 +1,386 @@
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #ffffff;
+}
+
+.navbar {
+    background-color: #ff758c;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.logo {
+    font-size: 1.5rem;
+    color: #2a428c;
+    text-decoration: none;
+    font-weight: bold;
+    margin-right: auto;
+}
+
+.nav-links a {
+    margin-left: 1.5rem;
+    text-decoration: none;
+    color: #333;
+}
+
+.btn {
+    width: 150px;
+    height: 50px;
+    border-radius: 5px;
+    border: none;
+    transition: all 0.5s ease-in-out;
+    font-size: 20px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    background: #040f16;
+    color: #f5f5f5;
+    margin-right: 0;
+  }
+  
+  .btn:hover {
+    box-shadow: 0 0 20px 0px #2e2e2e3a;
+  }
+  
+  .btn .icon {
+    position: absolute;
+    height: 40px;
+    width: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.5s;
+  }
+  
+  .btn .text {
+    transform: translateX(55px);
+  }
+  
+  .btn:hover .icon {
+    width: 175px;
+  }
+  
+  .btn:hover .text {
+    transition: all 0.5s;
+    opacity: 0;
+  }
+  
+  .btn:focus {
+    outline: none;
+  }
+  
+  .btn:active .icon {
+    transform: scale(0.85);
+  }
+
+/* inf container css */
+.profile-container {
+    max-width: 100%;
+    margin: 1px;
+    padding: 50px;
+    background-color: #ff99ac;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.inf-container {
+    max-width: 100%;
+    margin: 1px;
+    padding: 30px;
+    background-color: #ff99ac;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+}
+
+/* profile avatar css */
+.profile-header {
+    text-align: center ;
+    margin-bottom: 2rem;
+}
+
+.avatar {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1rem;
+}
+
+.location {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+/* interest css */
+.interests-list {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.interest-tag {
+    background-color: #e74c3c;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+/* int button css */
+.interaction-bar {
+    margin: 2rem 0;
+    text-align: right;
+}
+
+.action-group {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.action-btn {
+    border: none;
+    border-radius: 25px;
+    padding: 0.8rem 1.5rem;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.like-btn {
+    background: #3498db;
+    color: white;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+
+.love-btn {
+    background: #e74c3c;
+    color: white;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.action-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.action-btn:not(:disabled):hover {
+    transform: translateY(-2px);
+}
+
+.hint-text {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+
+/* edit button css */
+.edit-button {
+    display: inline-block;
+    margin-top: 2rem;
+    padding: 0.8rem 1.5rem;
+    background-color: #3498db;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.edit-button:hover {
+    background-color: #2980b9;
+}
+
+.username-container {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin: 1rem 0;
+}
+
+.InstagramBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: transparent;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* Instagram */
+.InstagramBtn:hover {
+    background: linear-gradient(45deg, #405DE6, #833AB4, #C13584, #E1306C, #FD1D1D);
+}
+.svgIcon {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.3s ease;
+}
+
+.InstagramBtn:hover .svgIcon {
+    transform: scale(1.1);
+}
+
+.instagram-username {
+    color: #555;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.InstagramBtn:hover .instagram-username {
+    color: white;
+}
+
+.contact-container {
+    max-width: 100%;
+    margin: 1px;
+    padding: 30px;
+    background-color: #ff99ac;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    gap: 0.2em;
+}
+
+/* for edit profile css */
+.edit-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.edit-form {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-section label {
+    font-weight: 600;
+    color: #2a428c;
+}
+
+input, textarea, select {
+    padding: 0.8rem;
+    border: 2px solid #ff99ac;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: #ff758c;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.save-btn {
+    background: #3498db;
+    color: white;
+    padding: 0.8rem 2rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.save-btn:hover {
+    background: #2980b9;
+}
+
+.cancel-btn {
+    background: #e74c3c;
+    color: white;
+    padding: 0.8rem 2rem;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background 0.3s;
+}
+
+/* for upload picture css */
+.avatar-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.current-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #ff99ac;
+}
+
+input[type="file"] {
+    display: none; /* 隐藏默认文件输入 */
+}
+
+.upload-hint {
+    padding: 0.5rem 1rem;
+    background: #3498db;
+    color: white;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.upload-hint:hover {
+    background: #2980b9;
+}
+
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .username-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+    }
+
+    .InstagramBtn {
+        padding: 0.3rem 0.8rem;
+    }
+}
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .profile-container {
+        margin: 1rem;
+        padding: 1rem;
+    }
+
+    .avatar {
+        width: 150px;
+        height: 150px;
+    }
+}
