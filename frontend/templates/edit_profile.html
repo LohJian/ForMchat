@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Edit profile - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="edit-container">
+    <h1>Edit profile</h1>
+    
+    <form method="POST" action="/edit-profile/{{ user.id }}" enctype="multipart/form-data" class="edit-form">
+        <div class="form-section">
+            <label>Username</label>
+            <input type="text" name="username" value="{{ user.username }}" required>
+        </div>
+
+        <div class="form-section">
+            <label>Age</label>
+            <input type="number" name="age" value="{{ user.age }}" min="18" max="99">
+        </div>
+
+        <div class="form-section">
+            <label>Faculty</label>
+            <select name="faculty">
+                <option value="FCI" {% if user.faculty == 'FCI' %}selected{% endif %}>FCI</option>
+                <option value="FOE" {% if user.faculty == 'FOE' %}selected{% endif %}>FOE</option>
+                <option value="FOM" {% if user.faculty == 'FOM' %}selected{% endif %}>FOM</option>
+                <option value="FCM" {% if user.faculty == 'FCM' %}selected{% endif %}>FCM</option>
+                <option value="FCA" {% if user.faculty == 'FCA' %}selected{% endif %}>FCA</option>
+                <option value="FOB" {% if user.faculty == 'FOB' %}selected{% endif %}>FOB</option>
+                <option value="FAC" {% if user.faculty == 'FAC' %}selected{% endif %}>FAC</option>
+                <option value="FOL" {% if user.faculty == 'FOL' %}selected{% endif %}>FOL</option>
+
+            </select>
+        </div>
+
+        <div class="form-section">
+            <label>location</label>
+            <input type="text" name="location" value="{{ user.location }}">
+        </div>
+
+        <!-- for bio -->
+        <div class="form-section">
+            <label>bio</label>
+            <textarea name="bio" rows="4">{{ user.bio }}</textarea>
+        </div>
+
+        <!-- for interest -->
+        <div class="form-section">
+            <label>Interests（using , seperate）</label>
+            <input type="text" name="interests" value="{{ user.interests|join(', ') }}">
+        </div>
+
+        <div class="form-section">
+            <label>Avatar</label>
+            <div class="avatar-upload">
+                <img src="{{ url_for('static', filename=user.avatar) }}" class="current-avatar">
+                <input type="file" name="avatar" accept="image/*" id="avatar-upload" style="display: block;">
+                <label for="avatar-upload" class="upload-hint">Select to choose new avatar</label>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="save-btn">save</button>
+            <a href="/profile/{{ user.id }}" class="cancel-btn">cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
