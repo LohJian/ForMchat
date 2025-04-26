@@ -72,14 +72,14 @@ def handle_like(user_id):
         db.session.commit()  
     return render_template('like_button.html', user=user)
 
-@app.route('/love/<int:user_id>', methods=['POST'])
-def handle_love(user_id):
+@app.route('/loves/<int:user_id>', methods=['POST'])
+def handle_loves(user_id):
     user = User.query.get_or_404(user_id)
-    if not session.get(f'love_{user_id}'):
-        user.love += 1
-        session[f'love_{user_id}'] = True
+    if not session.get(f'loves_{user_id}'):
+        user.loves += 1
+        session[f'loves_{user_id}'] = True
         db.session.commit()  
-    return render_template('love_button.html', user=user)
+    return render_template('loves_button.html', user=user)
 
 @app.route('/edit-profile/<int:user_id>', methods=['GET', 'POST'])
 def edit_profile(user_id):
