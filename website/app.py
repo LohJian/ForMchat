@@ -5,11 +5,14 @@ import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.secret_key = 'ForMchat1234'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+
 db = SQLAlchemy(app)
+migrate =  Migrate(app, db)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -101,13 +104,12 @@ def login():
             if user.is_verified:
                 flash('Login successful! Welcome back.')
                 return redirect('/dashboard')
+            else:
+                 flash('Please verify your email before logging in.')
         else:
-            flash('Please verify your email before logging in.')
-
-    else:
-             flash('Invalid email  or password.')
-
-    return render_template('login.html')
+            flash('Invalid email or password')
+            
+    return render_template('login.html')    
 
 @app.route('/verify')
 def verify_email():
