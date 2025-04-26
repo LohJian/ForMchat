@@ -1,9 +1,12 @@
 import os
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from datetime import timedelta
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from flask import Flask, session, render_template, request, redirect, url_for, flash
+
+migrate = Migrate(app.db)
 
 basedir = Path(__file__).parent
 instance_path = basedir / "instance"
@@ -12,7 +15,7 @@ instance_path.mkdir(exist_ok=True)
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{instance_path}/users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = 'your-secret-key-123'  
+app.secret_key = os.environ.get('SECRET_KEY') or 'dev-key-123'  
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'  
