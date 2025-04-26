@@ -43,12 +43,6 @@
             <textarea name="bio" rows="4">{{ user.bio }}</textarea>
         </div>
 
-        <!-- for interest -->
-        <div class="form-section">
-            <label>Interests（using , seperate）</label>
-            <input type="text" name="interests" value="{{ user.interests|join(', ') }}">
-        </div>
-
         <div class="form-section">
             <label>Avatar</label>
             <div class="avatar-upload">
