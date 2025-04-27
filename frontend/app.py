@@ -6,23 +6,31 @@ from pathlib import Path
 from werkzeug.utils import secure_filename
 from flask import Flask, session, render_template, request, redirect, url_for, flash
 
-migrate = Migrate(app.db)
-
 basedir = Path(__file__).parent
 instance_path = basedir / "instance"
 instance_path.mkdir(exist_ok=True)
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{instance_path}/users.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 app.secret_key = os.environ.get('SECRET_KEY') or 'dev-key-123'  
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'  
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}  
-app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.abspath("instance/yourdb.db")}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_NAMING_CONVENTION'] = {
+    "ix": 'ix_%(column_0_label)s',
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s"
+}
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
