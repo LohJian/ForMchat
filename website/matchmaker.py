@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify, render_template_string, url_for
 import sqlite3
 import os
 
-# Point to the correct static folder path
 app = Flask(__name__, static_folder='static')
 
 HTML_PAGE = """
