@@ -1,6 +1,7 @@
 <button class="action-btn love-btn"
-        {% if session.loved %}disabled{% endif %}
-        {% if not session.loved %}hx-post="/love/{{ user.id }}"{% endif %}
-        hx-swap="outerHTML">
-    ❤️ {{ user.loves }}
+        {% if session.get('loved_' ~ user.id) %}disabled{% endif %}
+        hx-post="{{ url_for('handle_love', user_id=user.id) }}"
+        hx-swap="outerHTML"
+        hx-headers='{"X-CSRFToken": "{{ csrf_token() }}"}'>
+    ❤️ {{ user.loves if user.loves is not none else 0 }}
 </button>

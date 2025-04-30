@@ -1,6 +1,7 @@
 <button class="action-btn like-btn" 
-        {% if session.liked %}disabled{% endif %}
-        {% if not session.liked %}hx-post="/like/{{ user.id }}"{% endif %}
-        hx-swap="outerHTML">
-    👍 {{ user.likes }}
+        {% if session.get('liked_' ~ user.id) %}disabled{% endif %}
+        hx-post="{{ url_for('handle_like', user_id=user.id) }}"
+        hx-swap="outerHTML"
+        hx-headers='{"X-CSRFToken": "{{ csrf_token() }}"}'>
+    👍 {{ user.likes if user.likes is not none else 0 }}
 </button>

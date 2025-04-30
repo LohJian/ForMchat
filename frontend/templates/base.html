@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-en">
 <head>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,18 +12,15 @@
 
 <body>    
     <nav class="navbar">
-    <button class="btn">
-        <span class="icon">
-             <svg viewBox="0 0 175 80" width="40" height="40">
-                <rect width="80" height="15" fill="#f0f0f0" rx="10"></rect>
-                <rect y="30" width="80" height="15" fill="#f0f0f0" rx="10"></rect>
-                 <rect y="60" width="80" height="15" fill="#f0f0f0" rx="10"></rect>
-             </svg>
-        </span>
-        <span class="text">MENU</span>
-    </button>
+    <!-- From Uiverse.io by zymantas-katinas --> 
+        <button class="button" onclick="window.location.href='/'">
+            <span class="shadow"></span>
+                <span class="edge"></span>
+                    <div class="front">
+                <span>ForMchat</span>
+            </div>
+        </button>
 
-        <a href="/" class="logo">ForMchat</a>
         <div class="nav-links">
             <a href="/profile/1">User Profile page</a>
         </div>
