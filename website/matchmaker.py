@@ -2,10 +2,9 @@ from flask import Flask, request, jsonify, render_template_string, url_for
 import sqlite3
 import os
 
-app = Flask(__name__)
-app.static_folder = 'static'
+# Point to the correct static folder path
+app = Flask(__name__, static_folder='static')
 
-# HTML Page
 HTML_PAGE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -40,6 +39,8 @@ HTML_PAGE = """
             height: 100px;
             border-radius: 50%;
             object-fit: cover;
+            border: 2px solid #000;
+            background: #ccc;
         }
         .arrow {
             font-size: 30px;
@@ -47,13 +48,15 @@ HTML_PAGE = """
             cursor: pointer;
         }
         .btn {
-            background: #ff69b4;
+            background: #007bff;
             color: white;
             border: none;
             padding: 10px 20px;
             border-radius: 8px;
             cursor: pointer;
             margin-top: 10px;
+            text-decoration: none;
+            display: inline-block;
         }
     </style>
 </head>
@@ -75,6 +78,7 @@ HTML_PAGE = """
         </div>
         <p id="bio">Bio goes here</p>
         <p id="commonTraits">Common traits: 0</p>
+        <a id="profileLink" href="#" class="btn" target="_blank">Click to view profile</a>
     </div>
 
     <div>
@@ -93,7 +97,10 @@ HTML_PAGE = """
             document.getElementById('matchUsername').textContent = match.username;
             document.getElementById('bio').textContent = match.bio;
             document.getElementById('commonTraits').textContent = "Common traits: " + match.common_traits;
+            document.getElementById('matchAvatar').src = "/static/" + match.avatar;
+            document.getElementById('localAvatar').src = "/static/default.jpg"; // Assuming local user is Yu Zhe
             document.getElementById('localUsername').textContent = localName;
+            document.getElementById('profileLink').href = "/profile/" + match.username;
         }
 
         function nextMatch() {
@@ -125,13 +132,11 @@ HTML_PAGE = """
 </html>
 """
 
-# Database connection
 def get_db_connection():
     conn = sqlite3.connect('user.db')
     conn.row_factory = sqlite3.Row
     return conn
 
-# Count common traits
 def count_common_traits(user1, user2):
     common = 0
     if user1['race'] == user2['race']:
@@ -142,14 +147,11 @@ def count_common_traits(user1, user2):
         common += 1
     return common
 
-# Find compatible users
 def find_compatible_users(current_user):
     conn = get_db_connection()
     cursor = conn.cursor()
-
     cursor.execute('SELECT * FROM user WHERE id != ?', (current_user['id'],))
     users = cursor.fetchall()
-
     matches = []
     for user in users:
         if user['sex'] != current_user['sex']:
@@ -157,7 +159,6 @@ def find_compatible_users(current_user):
             user_dict = dict(user)
             user_dict['common_traits'] = common
             matches.append(user_dict)
-
     matches.sort(key=lambda u: u['common_traits'], reverse=True)
     conn.close()
     return matches
@@ -172,19 +173,19 @@ def get_matches():
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM user WHERE username = ?", ("Yu Zhe",))
     user = cursor.fetchone()
-
     if not user:
         return jsonify({'error': 'Local user not found'}), 404
-
     current_user = dict(user)
     matches = find_compatible_users(current_user)
     return jsonify({'username': current_user['username'], 'matches': matches})
 
-# Setup sample data
+@app.route('/profile/<username>')
+def profile(username):
+    return f"<h1>Profile page for {username}</h1>"
+
 def setup_database():
     if os.path.exists('user.db'):
         os.remove('user.db')
-
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
@@ -199,7 +200,6 @@ def setup_database():
             avatar TEXT
         )
     ''')
-
     sample_users = [
         ("Yu Zhe", 19, "male", "FCI", "chinese", "Hi, I'm Yu Zhe!", "default.jpg"),
         ("Jasmine", 19, "female", "FCI", "chinese", "Hi there, I'm Jasmine!", "default.jpg"),
