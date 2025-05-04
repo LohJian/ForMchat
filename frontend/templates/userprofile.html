@@ -6,17 +6,23 @@
     <div class="profile-header">
             <img src="{{ url_for('static', filename=user.avatar if user.avatar else 'images/default_avatar.jpg') }}"
             class="avatar"
-                onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default_avatar.
-                jpg') }}'">
+            onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default_avatar.jpg') }}'">
             <h1>{{ user.username }}, {{ user.age }}</h1>
             <p class="location">{{ user.location }}</p>
     </div>
 </div>
 
-<div class="stats">
-    <p>Likes Received: {{ likes }}</p>
-    <p>Loves Received: {{ loves }}</p>
-</div>
+<form method="POST" action="{{ url_for('like_user', sender_id=current_user_id, receiver_id=user.id) }}">
+    <button type="submit" {% if has_liked %}disabled{% endif %}>
+        {{ 'Liked' if has_liked else 'Like' }}
+    </button>
+</form>
+
+<form method="POST" action="{{ url_for('love_user', sender_id=current_user_id, receiver_id=user.id) }}">
+    <button type="submit" {% if has_loved %}disabled{% endif %}>
+        {{ 'Loved' if has_loved else 'Love' }}
+    </button>
+</form>
 
 <div class="inf-container">
     <!--sex-->
@@ -51,7 +57,6 @@
         <span class="text">Instagram</span>
         </button>
     </a>
-    <a href="/edit-profile/{{ user.id }}" class="edit-button">✏️ Edit profile</a>
 </div>
 
 {% endblock %}
