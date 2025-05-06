@@ -3,27 +3,36 @@
 
 {% block content %}
 <div class="profile-container">
+    <!-- Profile Header -->
     <div class="profile-header">
-            <img src="{{ url_for('static', filename=user.avatar if user.avatar else 'images/default_avatar.jpg') }}"
-            class="avatar"
-            onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default_avatar.jpg') }}'">
-            <h1>{{ user.username }}, {{ user.age }}</h1>
-            <p class="location">{{ user.location }}</p>
+        <img src="{{ url_for('static', filename=user.avatar) }}" 
+             class="avatar"
+             onerror="this.src='{{ url_for('static', filename='images/default_avatar.jpg') }}'">
+        <h1>{{ user.username }}, {{ user.age }}</h1>
+        <p class="location">{{ user.location }}</p>
+    </div>
+
+    <div class="interaction-buttons">
+        <form method="POST" action="{{ url_for('like', user_id=user.id) }}" class="interaction-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="interaction-btn like-btn {% if has_liked %}active{% endif %}" {% if has_liked %}disabled{% endif %}>
+                <span class="icon">👍</span>
+                <span class="count">{{ like_count }}</span>
+                <span class="label">{{ 'Liked' if has_liked else 'Like' }}</span>
+            </button>
+        </form>
+    
+        <form method="POST" action="{{ url_for('love', user_id=user.id) }}" class="interaction-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="interaction-btn love-btn {% if has_loved %}active{% endif %}" {% if has_loved %}disabled{% endif %}>
+                <span class="icon">❤️</span>
+                <span class="count">{{ love_count }}</span>
+                <span class="label">{{ 'Loved' if has_loved else 'Love' }}</span>
+            </button>
+        </form>
     </div>
 </div>
-
-<form method="POST" action="{{ url_for('like_user', sender_id=current_user_id, receiver_id=user.id) }}">
-    <button type="submit" {% if has_liked %}disabled{% endif %}>
-        {{ 'Liked' if has_liked else 'Like' }}
-    </button>
-</form>
-
-<form method="POST" action="{{ url_for('love_user', sender_id=current_user_id, receiver_id=user.id) }}">
-    <button type="submit" {% if has_loved %}disabled{% endif %}>
-        {{ 'Loved' if has_loved else 'Love' }}
-    </button>
-</form>
-
+</div>
 <div class="inf-container">
     <!--sex-->
     <section class="sex">

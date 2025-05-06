@@ -2,7 +2,7 @@ import os
 import sqlite3
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from datetime import timedelta
+from datetime import timedelta, datetime
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from flask import Flask, session, render_template, request, redirect, url_for, flash
@@ -11,19 +11,19 @@ from sqlalchemy.orm import relationship
 import secrets
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY') or 'dev-key-123' 
+app.config['SECRET_KEY'] = 'your-very-secret-key-here'
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 app.config['UPLOAD_FOLDER'] = os.path.join('images', 'uploads') 
 app.config['DEFAULT_AVATAR'] = 'images/default_avatar.jpg'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}  
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///C:/Users/user/Projects/ForMchat/frontend/user.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///C:/Users/user/Projects/ForMchat/frontend/users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -40,8 +40,6 @@ class User(db.Model):
     bio = db.Column(db.Text)
     location = db.Column(db.String(100))
     avatar = db.Column(db.String(100), default=app.config['DEFAULT_AVATAR'])
-    liked_users = relationship("Like", foreign_keys="Like.user_id", backref="liker")
-    loved_users = relationship("Love", foreign_keys="Love.user_id", backref="lover")
     likes_received = relationship("Like", foreign_keys="Like.target_user_id", backref="liked_user")
     loves_received = relationship("Love", foreign_keys="Love.target_user_id", backref="loved_user")
 
@@ -49,14 +47,20 @@ class User(db.Model):
 class Like(db.Model):
     __tablename__ = 'likes'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  
     target_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    session_id = db.Column(db.String(50))
+
 
 class Love(db.Model):
     __tablename__ = 'loves'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     target_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    session_id = db.Column(db.String(50))
+
+@app.before_request
+def before_request():
+    if 'session_id' not in session:
+        session['session_id'] = secrets.token_hex(16)
 
 def generate_csrf_token():
     if 'csrf_token' not in session:
@@ -128,52 +132,66 @@ def allowed_file(filename):
 
 @app.route('/')
 def home():
-    return "Welcome! <a href='/profile/1'>View Profile</a>"
+    user = User.query.get(1)
+    return render_template('mainpage.html', user=user)
 
 @app.route('/profile/<int:user_id>', endpoint='profile-page')
 def profile(user_id):
     user = User.query.get_or_404(user_id)
-    print(f"User avatar path: {user.avatar}")  
-    print(f"Static folder: {app.static_folder}")
-    likes = Like.query.filter_by(target_user_id=user.id).count()
-    loves = Love.query.filter_by(target_user_id=user.id).count()
-    return render_template('my_profile.html',
-                         user=user,
-                         likes=likes,
-                         loves=loves)
+    
+    like_count = len(user.likes_received)
+    love_count = len(user.loves_received)
+    
+    return render_template('profile.html',
+                        user=user,
+                        like_count=like_count,
+                        love_count=love_count)
 
 @app.route('/user/<int:user_id>', endpoint='userprofile-page')
-def view_profile(user_id):
+def user_profile(user_id):
+    """Show other users' profiles (with interaction)"""
     user = User.query.get_or_404(user_id)
-    print(f"User avatar path: {user.avatar}")  
-    print(f"Static folder: {app.static_folder}")
-    current_user_id = 1  
-    has_liked = Like.query.filter_by(user_id=current_user_id, target_user_id=user.id).first()
-    has_loved = Love.query.filter_by(user_id=current_user_id, target_user_id=user.id).first()
-    return render_template('view_profile.html',
+    
+    # Get counts
+    like_count = Like.query.filter_by(target_user_id=user_id).count()
+    love_count = Love.query.filter_by(target_user_id=user_id).count()
+    
+    # Check if current session has already liked/loved
+    has_liked = Like.query.filter_by(
+        target_user_id=user_id,
+        session_id=session['session_id']
+    ).first() is not None
+    
+    has_loved = Love.query.filter_by(
+        target_user_id=user_id,
+        session_id=session['session_id']
+    ).first() is not None
+    
+    return render_template('userprofile.html',
                          user=user,
+                         like_count=like_count,
+                         love_count=love_count,
                          has_liked=has_liked,
                          has_loved=has_loved)
 
-@app.route('/like/<int:sender_id>/<int:receiver_id>', methods=['POST'])
-def handle_like(sender_id, receiver_id):
-    if not Like.query.filter_by(user_id=sender_id, target_user_id=receiver_id).first():
-        new_like = Like(user_id=sender_id, target_user_id=receiver_id)
+@app.route('/like/<int:user_id>', methods=['POST'])
+def like(user_id):
+    """Handle like action"""
+    if not Like.query.filter_by(target_user_id=user_id, session_id=session['session_id']).first():
+        new_like = Like(target_user_id=user_id, session_id=session['session_id'])
         db.session.add(new_like)
         db.session.commit()
-    return render_template('like_button.htmx', 
-                         user_id=sender_id,
-                         target_user_id=receiver_id)
+    return redirect(url_for('userprofile-page', user_id=user_id))
 
-@app.route('/love/<int:sender_id>/<int:receiver_id>', methods=['POST'])
-def handle_love(sender_id, receiver_id):
-    if not Love.query.filter_by(user_id=sender_id, target_user_id=receiver_id).first():
-        new_love = Love(user_id=sender_id, target_user_id=receiver_id)
+@app.route('/love/<int:user_id>', methods=['POST'])
+def love(user_id):
+    """Handle love action"""
+    if not Love.query.filter_by(target_user_id=user_id, session_id=session['session_id']).first():
+        new_love = Love(target_user_id=user_id, session_id=session['session_id'])
         db.session.add(new_love)
         db.session.commit()
-    return render_template('love_button.htmx',
-                         user_id=sender_id,
-                         target_user_id=receiver_id)
+    return redirect(url_for('userprofile-page', user_id=user_id))
+
 
 @app.route('/test-save')
 def test_save():
@@ -205,9 +223,9 @@ def edit_profile(user_id):
             user.location = request.form['location']
             user.bio = request.form['bio']
 
-            db.session.commit()  # Critical!
+            db.session.commit()  
             flash('Profile updated!', 'success')
-            return redirect(url_for('profile', user_id=user_id))
+            return redirect(url_for('profile-page', user_id=user_id))
             
         except ValueError as e:
             db.session.rollback()
