@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, flash 
+from flask import Flask, render_template, request, redirect, flash ,session
 from flask_sqlalchemy import SQLAlchemy 
 from werkzeug.security import generate_password_hash,check_password_hash
 import os
@@ -15,6 +15,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 
 db = SQLAlchemy(app)
 migrate =  Migrate(app, db)
+
+ADMIN_USERNAME = 'admin'
+ADMIN_PASSWORD = 'admin123'
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -38,7 +41,7 @@ with app.app_context():
 
 def send_verification_email(to_email):
     sender_email = "yipyuzhe1402@gmail.com"
-    sender_password ="hatk oppz rfcs bqvr" 
+    sender_password ="ickx ujbm ggmu iggr" 
 
     subject = "Verify your email - ForMchat"
     verification_link = f"http://localhost:5000/verify?email={to_email}"
@@ -69,12 +72,14 @@ def send_verification_email(to_email):
             server.login(sender_email, sender_password)
             server.send_message(msg)
             print(f"Verification email sent to {to_email}")
+            return True
     except Exception as e:
         print("Email sending failed", e)
+        return False
 
 def send_reset_password_email(to_email):
     sender_email = "yipyuzhe1402@gmail.com"
-    sender_password = "hatk oppz rfcs bqvr"
+    sender_password = "ickx ujbm ggmu iggr"
 
     subject = "Reset your password - ForMchat"
     reset_link = f"http://localhost:5000/reset_password?email={to_email}"
@@ -101,6 +106,58 @@ def send_reset_password_email(to_email):
             print(f"Reset password email sent to {to_email}")
     except Exception as e:
         print("Email sending failed", e)
+
+@app.route('/admin_login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['admin_logged_in'] = True
+            return redirect('/admin_dashboard')
+        else:
+            return 'Invalid admin credentials'
+    return render_template('admin_login.html')
+
+@app.route('/admin_dashboard')
+def admin_dashboard():
+    if not session.get('admin_logged_in'):
+        return redirect('/admin_login')
+
+    pending_users = User.query.filter_by(verification_status="Pending").all()
+    verified_users = User.query.filter_by(verification_status="Verified").all()
+    rejected_users = User.query.filter_by(verification_status="Rejected").all()
+    
+    return render_template('admin_dashboard.html', pending_users=pending_users,verified_users=verified_users,rejected_users=rejected_users)
+
+@app.route('/approve/<int:user_id>')
+def approve_user(user_id):
+    if not session.get('admin_logged_in'):
+        return redirect('/admin_login')
+
+    user = User.query.get(user_id)
+    if user:
+        user.is_verified = True
+        user.verification_status = "Verified"
+        db.session.commit()
+
+        if send_verification_email(user.email):
+            flash(f'User approved and verification email sent to {user.email}')
+        else:
+            flash('User approved but failed to send verification email. Please contact support.')
+    return redirect('/admin_dashboard')
+
+@app.route('/reject/<int:user_id>')
+def reject_user(user_id):
+    if not session.get('admin_logged_in'):
+        return redirect('/admin_login')
+
+    user = User.query.get(user_id)
+    if user:
+        user.is_verified = False
+        user.verification_status = "Rejected"
+        db.session.commit()
+    return redirect('/admin_dashboard')
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
@@ -129,6 +186,7 @@ def register():
         email = request.form['email']
         password = request.form['password']
         confirm_password = request.form['confirm_password']
+
         if not email.endswith('@student.mmu.edu.my'):
             flash('Please use your school email to register.')
             return redirect('/register')
@@ -143,12 +201,11 @@ def register():
             return redirect('/register')
 
         hashed_password = generate_password_hash(password)
-        new_user =User(username=username, email=email, password=hashed_password)
+        new_user =User(username=username, email=email, password=hashed_password, is_verified=False, verification_status="Pending")
         db.session.add(new_user)
         db.session.commit()
 
-        send_verification_email(email)
-        flash('Registered successfully. Please check your MMU email to verify your account.')
+        flash('Registration submitted for admin approval. You will receive an email once approved.')
         return redirect("/register")
 
     return render_template('register.html')
@@ -178,14 +235,19 @@ def verify_email():
     user = User.query.filter_by(email=email).first()
 
     if user:
-        if email.endswith('@student.mmu.edu.my'):
-            user.is_verified = True
-            user.verification_status = "Verified"
-            db.session.commit()
-            flash('Student verified successfully! You can now log in.')    
-            return redirect(f'/complete_profile/sex?email={email}')
+        if user.verification_status == "Verified" and user.is_verified:
+            if email.endswith('@student.mmu.edu.my'):
+                 if email.endswith('@student.mmu.edu.my'):
+                    if not user.faculty or not user.age:  
+                       flash('Email verified! Please complete your profile.')
+                    return redirect(f'/complete_profile?email={email}')
+                 else:
+                    flash('Email already verified! You can now log in.')
+                    return redirect('/login')
+            else:
+                flash('This email is not a valid school email address.')
         else:
-           flash('This email is not a valid school email address.')
+            flash('Your account has not been approved yet.')
     else:
         flash('Verification failed. Email not found.')
     
@@ -219,25 +281,8 @@ def reset_password():
     
     return render_template('reset_password.html', email=email)
 
-@app.route('/complete_profile/sex', methods=['GET', 'POST'])
-def complete_profile_sex():
-    email = request.args.get('email')
-    user = User.query.filter_by(email=email).first()
-
-    if not user:
-        flash('User not found.')
-        return redirect('/login')
-    
-    if request.method == 'POST':
-        sex = request.form['sex']
-        user.sex = sex
-        db.session.commit()
-        return redirect(f'/complete_profile/race?email={email}')
-
-    return render_template('complete_profile_sex.html', email=email)
-
-@app.route('/complete_profile/race', methods=['GET', 'POST'])
-def complete_profile_race():
+@app.route('/complete_profile', methods=['GET', 'POST'])
+def complete_profile():
     email = request.args.get('email')
     user = User.query.filter_by(email=email).first()
 
@@ -246,108 +291,34 @@ def complete_profile_race():
         return redirect('/login')
 
     if request.method == 'POST':
-        race = request.form['race']
-        user.race = race
-        db.session.commit()
-        return redirect(f'/complete_profile/faculty?email={email}')
-
-    return render_template('complete_profile_race.html', email=email)
-
-@app.route('/complete_profile/faculty', methods=['GET', 'POST'])
-def complete_profile_faculty():
-    email = request.args.get('email')
-    user = User.query.filter_by(email=email).first()
-
-    if not user:
-        flash('User not found.')
-        return redirect('/login')
-
-    if request.method == 'POST':
-        faculty = request.form['faculty']
-        user.faculty = faculty
-        db.session.commit()
-        return redirect(f'/complete_profile/age?email={email}')
-
-    return render_template('complete_profile_faculty.html', email=email)
-
-@app.route('/complete_profile/age', methods=['GET', 'POST'])
-def complete_profile_age():
-    email = request.args.get('email')
-    user = User.query.filter_by(email=email).first()
-
-    if not user:
-        flash('User not found.')
-        return redirect('/login')
-
-    if request.method == 'POST':
-        age = request.form['age']
-        user.age = age
-        db.session.commit()
-        return redirect(f'/complete_profile/location?email={email}')
-
-    return render_template('complete_profile_age.html', email=email)
-
-@app.route('/complete_profile/location', methods=['GET', 'POST'])
-def complete_profile_location():
-    email = request.args.get('email')
-    user = User.query.filter_by(email=email).first()
-
-    if not user:
-        flash('User not found.')
-        return redirect('/login')
-
-    if request.method == 'POST':
+        sex = request.form.get('sex')
+        race = request.form.get('race')
+        faculty = request.form.get('faculty')
+        age = request.form.get('age')
         location = request.form.get('location')
 
-        if not location:
-            flash('Please enter your location.')
-            return redirect(request.url)
-
+        user.sex = sex
+        user.race = race
+        user.faculty = faculty
+        user.age = age
         user.location = location
-        db.session.commit()
 
-        return redirect(f'/complete_profile/avatar?email={email}')
-
-    return render_template('complete_profile_location.html', email=email)
-
-@app.route('/complete_profile/avatar', methods=['GET', 'POST'])
-def complete_profile_avatar():
-    email = request.args.get('email')
-    user = User.query.filter_by(email=email).first()
-
-    if not user:
-        flash('User not found')
-        return redirect('/login')
-    
-    if request.method == 'POST':
-        if request.form.get('skip') == 'true':
-            flash('You can upload an avatar later in Edit Profile.')
-            return redirect('/dashboard')
-
-        if 'avatar' not in request.files:
-            flash('No file uploaded.')
-            return redirect(request.url)
-        
-        file = request.files['avatar']
-
-        if file.filename == '':
-            flash('No file selected.')
-            return redirect(request.url)
-        
-        if file:
-            filename = secure_filename(file.filename)
+        avatar_file = request.files.get('avatar')
+        if avatar_file and avatar_file.filename != '':
+            filename = secure_filename(avatar_file.filename)
             unique_filename = f"{uuid.uuid4().hex}_{filename}"
             upload_folder = os.path.join('static', 'uploads')
             os.makedirs(upload_folder, exist_ok=True)
             file_path = os.path.join(upload_folder, unique_filename)
-            file.save(file_path)
-
+            avatar_file.save(file_path)
             user.avatar = unique_filename
-            db.session.commit()
 
-            return redirect(f'/dashboard')
+        db.session.commit()
+        flash('Profile completed successfully!')
+        return redirect('/dashboard')
 
-    return render_template('complete_profile_avatar.html', email=email)
-      
+    return render_template('complete_profile.html', email=email)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
