@@ -192,6 +192,9 @@ def love(user_id):
         db.session.commit()
     return redirect(url_for('userprofile-page', user_id=user_id))
 
+@app.route('/chat')
+def chat():
+    return render_template('chatpage.html')
 
 @app.route('/test-save')
 def test_save():
