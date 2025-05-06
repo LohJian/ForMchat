@@ -3,21 +3,33 @@
 
 {% block content %}
 <div class="profile-container">
+    <!-- Profile Header -->
     <div class="profile-header">
-            <img src="{{ url_for('static', filename=user.avatar if user.avatar else 'images/default_avatar.jpg') }}"
-            class="avatar"
-                onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default_avatar.
-                jpg') }}'">
-            <h1>{{ user.username }}, {{ user.age }}</h1>
-            <p class="location">{{ user.location }}</p>
+        <img src="{{ url_for('static', filename=user.avatar) }}" 
+             class="avatar"
+             onerror="this.src='{{ url_for('static', filename='images/default_avatar.jpg') }}'">
+        <h1>{{ user.username }}, {{ user.age }}</h1>
+        <p class="location">{{ user.location }}</p>
     </div>
-</div>
 
-<div class="stats">
-    <p>Likes Received: {{ likes }}</p>
-    <p>Loves Received: {{ loves }}</p>
-</div>
 
+    <div class="interaction-buttons">
+        <!-- Like Counter -->
+        <div class="interaction-btn like-stat">
+            <span class="icon">👍</span>
+            <span class="count">{{ like_count }}</span>
+            <span class="label">Likes</span>
+        </div>
+    
+        <!-- Love Counter -->
+        <div class="interaction-btn love-stat">
+            <span class="icon">❤️</span>
+            <span class="count">{{ love_count }}</span>
+            <span class="label">Loves</span>
+        </div>
+    </div>
+    
+</div>
 <div class="inf-container">
     <!--sex-->
     <section class="sex">
