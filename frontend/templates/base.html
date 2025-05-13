@@ -8,8 +8,6 @@
     <title>{% block title %}Dating App{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
-
 <body>    
     <nav class="navbar">
     <!-- From Uiverse.io by zymantas-katinas --> 
@@ -20,10 +18,19 @@
                 <span>ForMchat</span>
             </div>
         </button>
-
-        <div class="nav-links">
-            <a href="/profile/1">User Profile page</a>
-        </div>
+        <label class="event-wrapper">
+            <input type="checkbox" checked="" class="event-wrapper-inp" />
+                <div class="bar">
+                    <span class="top bar-list"></span>
+                    <span class="middle bar-list"></span>
+                    <span class="bottom bar-list"></span>
+                </div>
+                <section class="menu-container">
+                    <div class="menu-list" onclick="window.location.href='/profile/1'">Profile</div>
+                    <div class="menu-list" onclick="window.location.href='/chat'">Chat</div>
+                    <div style="color:crimson;" class="menu-list" onclick="window.location.href='/'">Settings</div>
+                </section>
+        </label>
     </nav>
 
     <main>
@@ -41,7 +48,7 @@
     </main>
 
     <footer>
-        <p>© 2025 DatingApp. All rights reserved.</p>
+        <p>© 2025 ForMchat. All rights reserved.</p>
     </footer>
 </body>
 </html>

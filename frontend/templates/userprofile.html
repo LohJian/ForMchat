@@ -12,23 +12,25 @@
         <p class="location">{{ user.location }}</p>
     </div>
 
-
     <div class="interaction-buttons">
-        <!-- Like Counter -->
-        <div class="interaction-btn like-stat">
-            <span class="icon">👍</span>
-            <span class="count">{{ like_count }}</span>
-            <span class="label">Likes</span>
-        </div>
-    
-        <!-- Love Counter -->
-        <div class="interaction-btn love-stat">
-            <span class="icon">❤️</span>
-            <span class="count">{{ love_count }}</span>
-            <span class="label">Loves</span>
-        </div>
+        <form method="POST" action="{{ url_for('like', user_id=user.id) }}">
+            <input type="hidden" name="receiver_id" value="{{ user.id }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="interaction-btn like-btn {% if has_liked %}active{% endif %}" {% if has_liked %}disabled{% endif %}>
+                👍 Like ({{ like_count }})
+            </button>
+        </form>
+
+        <form method="POST" action="{{ url_for('love', user_id=user.id) }}">
+            <input type="hidden" name="receiver_id" value="{{ user.id }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="interaction-btn love-btn {% if has_loved %}active{% endif %}" {% if has_loved %}disabled{% endif %}>
+                ❤️ Love ({{ love_count }})
+            </button>
+        </form>
     </div>
-    
+    </div>
+</div>
 </div>
 <div class="inf-container">
     <!--sex-->
@@ -63,7 +65,6 @@
         <span class="text">Instagram</span>
         </button>
     </a>
-    <a href="/edit-profile/{{ user.id }}" class="edit-button">✏️ Edit profile</a>
 </div>
 
 {% endblock %}
