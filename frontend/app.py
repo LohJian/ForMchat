@@ -202,7 +202,7 @@ def like(user_id):
 
     if existing_like:
         flash("You've already liked this profile!", 'info')
-        return redirect(url_for('user_profile', user_id=user_id))
+        return redirect(url_for('userprofile-page', user_id=user_id))
 
     # Create new like
     new_like = Like(
@@ -213,7 +213,7 @@ def like(user_id):
     )
     db.session.add(new_like)
     db.session.commit()
-    return redirect(url_for('user_profile-page', user_id=user_id))
+    return redirect(url_for('userprofile-page', user_id=user_id))
 
 @app.route('/love/<int:user_id>', methods=['POST'])
 def love(user_id):
@@ -228,7 +228,7 @@ def love(user_id):
 
     if existing_love:
         flash("You've already loved this profile!", 'info')
-        return redirect(url_for('user_profile', user_id=user_id))
+        return redirect(url_for('userprofile-page', user_id=user_id))
 
     # Create new love
     new_love = Love(
@@ -239,7 +239,7 @@ def love(user_id):
     )
     db.session.add(new_love)
     db.session.commit()
-    return redirect(url_for('user_profile-page', user_id=user_id))
+    return redirect(url_for('userprofile-page', user_id=user_id))
 
 @app.route('/chat')
 def chat():
@@ -289,5 +289,11 @@ def edit_profile(user_id):
     
     return render_template('edit_profile.html', user=user)
 
+@app.route('/registerhome')
+def registerhome():
+    filepath = os.path.join('website 2', 'templates', 'home.html')
+    with open(filepath, 'r', encoding='utf-8') as f:
+        return f.read()
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)  # 使用默认端口5000
+    app.run(debug=True, port=5000) 
