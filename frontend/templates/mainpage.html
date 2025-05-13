@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="main-back">
+
+    <a href="{{ url_for('userprofile-page', user_id=user.id) }}" class="profile-link">
+        View My Profile
+    </a>
+</div>
+{% endblock %}

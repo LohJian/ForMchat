@@ -1,6 +1,9 @@
-<button class="action-btn love-btn"
-        {% if session.loved %}disabled{% endif %}
-        {% if not session.loved %}hx-post="/love/{{ user.id }}"{% endif %}
-        hx-swap="outerHTML">
-    ❤️ {{ user.loves }}
-</button>
+<div hx-swap-oob="true">
+  <span>Loves: {{ Love.query.filter_by(receiver_id=receiver_id).count() }}</span>
+</div>
+
+<form hx-post="/love/{{ sender_id }}/{{ receiver_id }}" hx-swap="none">
+  <button type="submit" 
+          class="loved" 
+          disabled>Loved ❤️</button>
+</form>

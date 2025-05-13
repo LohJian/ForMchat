@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign up - ForMchat</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f2f4f3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+      } 
+
+      
+      h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        form {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        label {
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        input[type="submit"] {
+            width: 100%;
+            background-color: #ff99ac;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #ff758c;
+        }
+
+        ul {
+            padding: 0;
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        li {
+            color: #ff758c;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        a button {
+            margin-top: 20px;
+            background-color: #e0e0e0;
+            color: #333;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        a button:hover {
+            background-color: #ccc;
+        }
+      
+    </style>
+</head>
+<body>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+        {% for message in messages %}
+          <li style="color: #ff99ac;">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <h2>Sign up</h2>
+    <form method="POST">
+        <label>Username:</label><br>
+        <input type="text" name="username" required><br><br>
+
+        <label>Email:</label><br>
+        <input type="email" name="email" required><br><br>
+         
+        <label>Password:</label><br>
+        <input type="password" name="password"required><br><br>
+        
+        <label>Confirm Password:</label><br>
+        <input type="password" name="confirm_password"required><br><br>
+
+        <input type="submit" value="Register">
+      
+    </form>
+
+    <br>
+    <a href="/" style="text-decoration: none;">
+      <button style="padding: 10px 20px;">⬅ Return to Homepage</button>
+  </a>
+</body>
+</html>

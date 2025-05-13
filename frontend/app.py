@@ -1,35 +1,139 @@
 import os
-from datetime import timedelta
+import sqlite3
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from datetime import timedelta, datetime
+from sqlalchemy.sql import func
+from pathlib import Path
 from werkzeug.utils import secure_filename
 from flask import Flask, session, render_template, request, redirect, url_for, flash
-
+from sqlalchemy import Column, Integer, ForeignKey, MetaData, create_engine
+from sqlalchemy.orm import relationship
+import pytz
+import sqlite3
+import secrets
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-123'  # Must be set for sessions to work
+app.config['SECRET_KEY'] = 'your-very-secret-key-here'
 app.config['SESSION_PERMANENT'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
-app.config['UPLOAD_FOLDER'] = 'static/uploads'  # 上传文件保存路径
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}  # 文件类型
-app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 最大文件2mb
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
+app.config['UPLOAD_FOLDER'] = os.path.join('images', 'uploads') 
+app.config['DEFAULT_AVATAR'] = 'images/default_avatar.jpg'
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}  
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///C:/Users/user/Projects/ForMchat/frontend/users.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-def create_mock_user():
-    return{
-        "id": 1,
-        "likes":0,
-        "loves":0,
-        "username": "JIANLOH",
-        "instagram" : "jianloh_123",
-        "age": 19,
-        "faculty": "FCI",
-        "bio": "like girl",
-        "location": "From Seremban",
-        "interests": ["Valorant", "Basketball"],
-        "avatar" : 'images/default_avatar.jpg'
+metadata = MetaData()
+db = SQLAlchemy(app, session_options={"future": True}, metadata=metadata)
+migrate = Migrate(app, db)
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'connect_args': {
+        'options': '-c timezone=UTC'
     }
+}
 
-with app.app_context():
-    mock_user = create_mock_user()
+class User(db.Model):
+    __tablename__ = 'user'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    is_verified = db.Column(db.Boolean, default=False)
+    verification_status = db.Column(db.String(100), default="Pending")
+    age = db.Column(db.Integer)
+    race = db.Column(db.String(50))
+    faculty = db.Column(db.String(50))
+    sex = db.Column(db.String(10))
+    bio = db.Column(db.Text)
+    location = db.Column(db.String(100))
+    avatar = db.Column(db.String(100), default=app.config['DEFAULT_AVATAR'])
+    likes_received = db.relationship("Like", foreign_keys="Like.target_user_id", backref="target_user")
+    loves_received = db.relationship("Love", foreign_keys="Love.target_user_id", backref="target_user")
 
+
+class Like(db.Model):
+    __tablename__ = 'likes'
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False  )
+    target_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    session_id = db.Column(db.String(50), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True),server_default=func.now(),nullable=False)
+
+
+class Love(db.Model):
+    __tablename__ = 'loves'
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    user_id = db.Column( db.Integer,  db.ForeignKey('user.id'),  nullable=False  )
+    target_user_id = db.Column(db.Integer,  db.ForeignKey('user.id'), nullable=False)
+    session_id = db.Column(db.String(50), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+@app.before_request
+def before_request():
+    if 'session_id' not in session:
+        session['session_id'] = secrets.token_hex(16)
+
+def generate_csrf_token():
+    if 'csrf_token' not in session:
+        session['csrf_token'] = secrets.token_hex(16)
+    return session['csrf_token']
+
+app.jinja_env.globals['csrf_token'] = generate_csrf_token
+
+@app.route('/test-db')
+def test_db():
+    first_user = User.query.first()
+    return f"First user: {first_user.username if first_user else 'No users found'}"
+
+def migrate_database():
+    with app.app_context():
+        # Create a database engine directly
+        from sqlalchemy import create_engine, inspect
+        engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+        
+        # Check if columns exist
+        inspector = inspect(engine)
+        columns = inspector.get_columns('user')
+        column_names = [col['name'] for col in columns]
+        
+        # Add missing columns
+        with engine.connect() as connection:
+            if 'sex' not in column_names:
+                connection.execute('ALTER TABLE user ADD COLUMN sex VARCHAR(50)')
+            if 'race' not in column_names:
+                connection.execute('ALTER TABLE user ADD COLUMN race VARCHAR(50)')
+        
+        print("Database schema updated successfully")
+
+@app.route('/upload_avatar/<int:user_id>', methods=['POST'])
+def upload_avatar(user_id):
+    user = User.query.get_or_404(user_id)
+    if 'avatar' not in request.files:
+        flash('No file selected', 'error')
+        return redirect(request.url)
+        
+    file = request.files['avatar']
+    if file.filename == '':
+        flash('No file selected', 'error')
+        return redirect(request.url)
+        
+    if file and allowed_file(file.filename):
+        filename = secure_filename(f"{user.id}_{file.filename}")
+        upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        os.makedirs(os.path.dirname(upload_path), exist_ok=True)
+        file.save(upload_path)
+        
+        user.avatar = os.path.join('uploads', filename)
+        db.session.commit()
+        flash('Avatar updated successfully!', 'success')
+        
+    return redirect(url_for('profile', user_id=user.id))
+        
 def check_interaction(action):
     session.permanent = True
     if not session.get(f'has_{action}'):
@@ -43,68 +147,147 @@ def allowed_file(filename):
 
 @app.route('/')
 def home():
-    return "Welcome! <a href='/profile/1'>View Profile</a>"
+    user = User.query.get(1)
+    return render_template('mainpage.html', user=user)
 
-@app.route('/profile/<int:user_id>')
+@app.route('/profile/<int:user_id>', endpoint='profile-page')
 def profile(user_id):
-    return render_template('profile.html', user=mock_user)
+    user = User.query.get_or_404(user_id)
+    
+    like_count = len(user.likes_received)
+    love_count = len(user.loves_received)
+    
+    return render_template('profile.html',
+                        user=user,
+                        like_count=like_count,
+                        love_count=love_count)
+
+@app.route('/user/<int:user_id>', endpoint='userprofile-page')
+def user_profile(user_id):
+    """Show other users' profiles (with interaction)"""
+    user = User.query.get_or_404(user_id)
+    
+    # Get counts
+    like_count = Like.query.filter_by(target_user_id=user_id).count()
+    love_count = Love.query.filter_by(target_user_id=user_id).count()
+    
+    # Check if current session has already liked/loved
+    has_liked = Like.query.filter_by(
+        target_user_id=user_id,
+        session_id=session['session_id']
+    ).first() is not None
+    
+    has_loved = Love.query.filter_by(
+        target_user_id=user_id,
+        session_id=session['session_id']
+    ).first() is not None
+    
+    return render_template('userprofile.html',
+                         user=user,
+                         like_count=like_count,
+                         love_count=love_count,
+                         has_liked=has_liked,
+                         has_loved=has_loved)
 
 @app.route('/like/<int:user_id>', methods=['POST'])
-def handle_like(user_id):
-    if not session.get('liked'):
-        mock_user['likes'] += 1
-        session['liked'] = True  
-    return render_template('like_button.html', user=mock_user)
+def like(user_id):
+    if 'session_id' not in session:
+        session['session_id'] = secrets.token_hex(16)
+
+    # Check if already liked
+    existing_like = Like.query.filter_by(
+        user_id=user_id,
+        session_id=session['session_id']
+    ).first()
+
+    if existing_like:
+        flash("You've already liked this profile!", 'info')
+        return redirect(url_for('user_profile', user_id=user_id))
+
+    # Create new like
+    new_like = Like(
+        user_id=user_id,
+        target_user_id=request.form['receiver_id'],
+        session_id=session['session_id'],
+        created_at=datetime.now(pytz.timezone('Asia/Kuala_Lumpur'))
+    )
+    db.session.add(new_like)
+    db.session.commit()
+    return redirect(url_for('user_profile-page', user_id=user_id))
 
 @app.route('/love/<int:user_id>', methods=['POST'])
-def handle_love(user_id):
-    if not session.get('loved'):
-        mock_user['loves'] += 1
-        session['loved'] = True
-    return render_template('love_button.html', user=mock_user)
+def love(user_id):
+    if 'session_id' not in session:
+        session['session_id'] = secrets.token_hex(16)
+
+    # Check if already loved
+    existing_love = Love.query.filter_by(
+        user_id=user_id,
+        session_id=session['session_id']
+    ).first()
+
+    if existing_love:
+        flash("You've already loved this profile!", 'info')
+        return redirect(url_for('user_profile', user_id=user_id))
+
+    # Create new love
+    new_love = Love(
+        user_id=user_id,
+        target_user_id=request.form['receiver_id'],
+        session_id=session['session_id'],
+        created_at=datetime.now(pytz.timezone('Asia/Kuala_Lumpur'))
+    )
+    db.session.add(new_love)
+    db.session.commit()
+    return redirect(url_for('user_profile-page', user_id=user_id))
+
+@app.route('/chat')
+def chat():
+    return render_template('chatpage.html')
+
+@app.route('/test-save')
+def test_save():
+    user = User.query.get(1)
+    user.bio = "Test " + datetime.now().strftime("%H:%M:%S")
+    db.session.commit()
+    return "Saved current time to bio"
 
 @app.route('/edit-profile/<int:user_id>', methods=['GET', 'POST'])
 def edit_profile(user_id):
-    if request.method == 'POST':
-        print("Form submitted!")  
-        print("Form data:", request.form)
-        print("Files:", request.files)
-
-        if 'avatar' in request.files:
-            file = request.files['avatar']
-
-            if file.filename != '' :
-                if allowed_file(file.filename):
-                    try:
-                        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-                        
-                        filename = secure_filename(f"user_{user_id}_{file.filename}")
-                        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                        
-                        file.save(save_path)
-                        print(f"File saved to: {save_path}")
-                        
-                        mock_user['avatar'] = f"uploads/{filename}"
-                        flash('Avatar updated successfully!', 'success')
-                    except Exception as e:
-                        print(f"Error saving file: {str(e)}")
-                        flash('Error saving avatar file', 'error')
-                else:
-                    flash('Invalid file type (allowed: PNG, JPG, JPEG, GIF)', 'error')
-
-        mock_user.update({
-            'username': request.form['username'],
-            'age': int(request.form['age']),
-            'faculty': request.form.get('faculty', mock_user['faculty']),
-            'location': request.form['location'],
-            'bio': request.form['bio'],
-            'interests': [i.strip() for i in request.form['interests'].split(',')]
-        })
-        
-        return redirect(url_for('profile', user_id=user_id))
+    user = User.query.get_or_404(user_id)
     
-    return render_template('edit_profile.html', user=mock_user)
+    if request.method == 'POST':
+        try:
+            if 'avatar' in request.files:
+                file = request.files['avatar']
+                if file.filename != '' and allowed_file(file.filename):
+                    filename = secure_filename(f"user_{user_id}_{file.filename}")
+                    upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    os.makedirs(os.path.dirname('forntend/images/default-avatar.jpg'), exist_ok=True)
+                    file.save('static/uploads')
+                    user.avatar = f"uploads/{filename}"                
 
+            user.username = request.form['username']
+            user.age = int(request.form['age'])
+            user.sex = request.form['sex']
+            user.race = request.form['race']
+            user.faculty = request.form.get('faculty', user.faculty)
+            user.location = request.form['location']
+            user.bio = request.form['bio']
+
+            db.session.commit()  
+            flash('Profile updated!', 'success')
+            return redirect(url_for('profile-page', user_id=user_id))
+            
+        except ValueError as e:
+            db.session.rollback()
+            flash(f'Invalid data: {str(e)}', 'error')
+        except Exception as e:
+            db.session.rollback() 
+            flash(f'Error updating profile: {str(e)}', 'error')
+            app.logger.error(f"Error in edit_profile: {e}")
+    
+    return render_template('edit_profile.html', user=user)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)  # 使用默认端口5000
