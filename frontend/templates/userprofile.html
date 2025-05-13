@@ -13,23 +13,22 @@
     </div>
 
     <div class="interaction-buttons">
-        <form method="POST" action="{{ url_for('like', user_id=user.id) }}" class="interaction-form">
+        <form method="POST" action="{{ url_for('like', user_id=user.id) }}">
+            <input type="hidden" name="receiver_id" value="{{ user.id }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="interaction-btn like-btn {% if has_liked %}active{% endif %}" {% if has_liked %}disabled{% endif %}>
-                <span class="icon">👍</span>
-                <span class="count">{{ like_count }}</span>
-                <span class="label">{{ 'Liked' if has_liked else 'Like' }}</span>
+                👍 Like ({{ like_count }})
             </button>
         </form>
-    
-        <form method="POST" action="{{ url_for('love', user_id=user.id) }}" class="interaction-form">
+
+        <form method="POST" action="{{ url_for('love', user_id=user.id) }}">
+            <input type="hidden" name="receiver_id" value="{{ user.id }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="interaction-btn love-btn {% if has_loved %}active{% endif %}" {% if has_loved %}disabled{% endif %}>
-                <span class="icon">❤️</span>
-                <span class="count">{{ love_count }}</span>
-                <span class="label">{{ 'Loved' if has_loved else 'Love' }}</span>
+                ❤️ Love ({{ love_count }})
             </button>
         </form>
+    </div>
     </div>
 </div>
 </div>
