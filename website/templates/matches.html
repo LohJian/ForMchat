@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Matchmaker</title>
+  <title>Find Friends</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -20,6 +20,13 @@
       max-width: 400px;
       box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
     }
+    .profile-pic {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 15px;
+    }
     .btn {
       background-color: #ff69b4;
       color: white;
@@ -29,22 +36,16 @@
       text-decoration: none;
       margin: 10px;
       display: inline-block;
-    }
-    .profile-pic {
-      width: 160px;
-      height: 160px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-bottom: 15px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-  <h1>💘 Matchmaking Results</h1>
+  <h1>Find New Friends</h1>
 
   <div class="match-card">
-    <img src="{{ url_for('static', filename=match.avatar) }}" alt="Profile Picture" class="profile-pic">
+    <img src="{{ url_for('static', filename='avatars/' + match.avatar) }}" alt="Avatar" class="profile-pic">
     <h2>{{ match.username }}</h2>
     <p><strong>Age:</strong> {{ match.age }}</p>
     <p><strong>Faculty:</strong> {{ match.faculty }}</p>
@@ -54,13 +55,13 @@
 
     {% if not already_liked %}
       <form method="post" action="{{ url_for('like_user', liked_id=match['id'], index=index) }}">
-        <button type="submit" class="btn">💖 Like</button>
+        <button type="submit" class="btn">Show Interest</button>
       </form>
     {% else %}
-      <p>✅ You liked this user</p>
-      <a href="{{ url_for('chat', user_id=match['id']) }}" class="btn">💬 Chat</a>
+      <p>✅ You have shown interest in this user</p>
     {% endif %}
 
+    <a href="{{ url_for('start_chat', other_user_id=match['id']) }}" class="btn">Start Chat</a>
     <a href="{{ url_for('show_match', index=(index + 1) % total) }}" class="btn">Next ➡️</a>
   </div>
 
