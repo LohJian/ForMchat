@@ -12,6 +12,8 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = 'ForMchat1234'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+UPLOAD_FOLDER = 'static/avatar/upload'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 db = SQLAlchemy(app)
 migrate =  Migrate(app, db)
@@ -26,6 +28,7 @@ class User(db.Model):
     password = db.Column(db.String(200), nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
     verification_status = db.Column(db.String(100), default="Pending")
+    is_admin = db.Column(db.Boolean, default=False)
     age = db.Column(db.Integer)
     race = db.Column(db.String(50))
     faculty = db.Column(db.String(50))
@@ -107,6 +110,84 @@ def send_reset_password_email(to_email):
     except Exception as e:
         print("Email sending failed", e)
 
+def send_approval_email(to_email):
+    sender_email = "yipyuzhe1402@gmail.com"
+    sender_password = "ickx ujbm ggmu iggr"
+
+    subject = "Your ForMchat Profile Has Been Approved"
+    login_link = "http://localhost:5000/login"
+    body = f"""
+    <html>
+      <body>
+        <p>Hi there,</p>
+        <p>Congratulations! Your ForMchat profile has been <strong>approved</strong> by the admin.</p>
+        <p>
+          <a href="{login_link}" style="padding:10px 20px; background-color:#28a745; color:white; text-decoration:none; border-radius:5px;">
+            Click here to login
+          </a>
+        </p>
+        <p>Enjoy connecting with others!</p>
+        <p>Regards,<br>ForMchat Team</p>
+      </body>
+    </html>
+    """
+
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = to_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'html'))
+
+    try:
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+            print(f"Approval email sent to {to_email}")
+            return True
+    except Exception as e:
+        print("Approval email failed:", e)
+        return False
+    
+def send_rejection_email(to_email):
+    sender_email = "yipyuzhe1402@gmail.com"
+    sender_password = "ickx ujbm ggmu iggr"
+
+    subject = "Your ForMchat Profile Was Rejected"
+    update_link = "http://localhost:5000/complete_profile?email=" + to_email
+    body = f"""
+    <html>
+      <body>
+        <p>Hi there,</p>
+        <p>We're sorry to inform you that your ForMchat profile was <strong>rejected</strong>.</p>
+        <p>You can update your profile and try again:</p>
+        <p>
+          <a href="{update_link}" style="padding:10px 20px; background-color:#dc3545; color:white; text-decoration:none; border-radius:5px;">
+            Update Your Profile
+          </a>
+        </p>
+        <p>Regards,<br>ForMchat Team</p>
+      </body>
+    </html>
+    """
+
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = to_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'html'))
+
+    try:
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+            print(f"Rejection email sent to {to_email}")
+            return True
+    except Exception as e:
+        print("Rejection email failed:", e)
+        return False
+
 @app.route('/admin_login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -124,39 +205,50 @@ def admin_dashboard():
     if not session.get('admin_logged_in'):
         return redirect('/admin_login')
 
-    pending_users = User.query.filter_by(verification_status="Pending").all()
-    verified_users = User.query.filter_by(verification_status="Verified").all()
-    rejected_users = User.query.filter_by(verification_status="Rejected").all()
-    
-    return render_template('admin_dashboard.html', pending_users=pending_users,verified_users=verified_users,rejected_users=rejected_users)
+    pending_approval_users = User.query.filter(
+        User.verification_status == "Pending Approval",
+        User.faculty.isnot(None),
+        User.age.isnot(None),
+        User.sex.isnot(None),
+        User.avatar != 'default.jpg'
+    ).all()
 
-@app.route('/approve/<int:user_id>')
+    verified_users = User.query.filter(User.verification_status == "Approved").all()
+    rejected_users = User.query.filter(User.verification_status == "Rejected").all()
+
+    return render_template('admin_dashboard.html', pending_users=pending_approval_users, verified_users=verified_users, rejected_users=rejected_users)
+
+@app.route('/approve/<int:user_id>', methods=['POST'])
 def approve_user(user_id):
     if not session.get('admin_logged_in'):
         return redirect('/admin_login')
 
     user = User.query.get(user_id)
-    if user:
-        user.is_verified = True
-        user.verification_status = "Verified"
+    if user and user.verification_status == "Pending Approval":
+        user.verification_status = "Approved"
         db.session.commit()
 
-        if send_verification_email(user.email):
-            flash(f'User approved and verification email sent to {user.email}')
+        if send_approval_email(user.email):
+            flash(f'User approved and login email sent to {user.email}')
         else:
-            flash('User approved but failed to send verification email. Please contact support.')
+            flash('User approved but failed to send login email.')
     return redirect('/admin_dashboard')
 
-@app.route('/reject/<int:user_id>')
+@app.route('/reject/<int:user_id>', methods=['POST'])
 def reject_user(user_id):
     if not session.get('admin_logged_in'):
         return redirect('/admin_login')
 
     user = User.query.get(user_id)
-    if user:
-        user.is_verified = False
+    if user and user.verification_status == "Pending Approval":
         user.verification_status = "Rejected"
         db.session.commit()
+
+        if send_rejection_email(user.email):
+            flash(f'User rejected and email sent to {user.email}')
+        else:
+            flash('User rejected but failed to send rejection email.')
+
     return redirect('/admin_dashboard')
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
@@ -201,12 +293,16 @@ def register():
             return redirect('/register')
 
         hashed_password = generate_password_hash(password)
-        new_user =User(username=username, email=email, password=hashed_password, is_verified=False, verification_status="Pending")
+        new_user = User(username=username, email=email, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
 
-        flash('Registration submitted for admin approval. You will receive an email once approved.')
-        return redirect("/register")
+        if send_verification_email(email):
+            flash('Registration successful. Please verify your email to complete your profile.')
+        else:
+            flash('There was an issue sending the verification email. Please try again.')
+        
+        return redirect('/register')
 
     return render_template('register.html')
 
@@ -219,39 +315,44 @@ def login():
         user = User.query.filter_by(email=email).first()
 
         if user and check_password_hash(user.password, password):
-            if user.is_verified:
-                flash('Login successful! Welcome back.')
+            if user.verification_status == "Approved":
+                session['user_id'] = user.id
+                flash('Login successful!')
                 return redirect('/dashboard')
+            elif user.verification_status == "Rejected":
+                flash('Your profile was rejected. Please update your profile.')
+                return redirect(f'/complete_profile?email={email}')
+            elif user.verification_status == "Pending Approval":
+                flash('Your profile is still waiting for admin approval.')
+                return redirect('/login')
             else:
-                 flash('Please verify your email before logging in.')
+                flash('Please complete your profile verification.')
+                return redirect('/login')
         else:
             flash('Invalid email or password')
-            
-    return render_template('login.html')    
+            return redirect('/login')
+    
+    return render_template('login.html')
 
 @app.route('/verify')
 def verify_email():
     email = request.args.get('email')
     user = User.query.filter_by(email=email).first()
 
-    if user:
-        if user.verification_status == "Verified" and user.is_verified:
-            if email.endswith('@student.mmu.edu.my'):
-                 if email.endswith('@student.mmu.edu.my'):
-                    if not user.faculty or not user.age:  
-                       flash('Email verified! Please complete your profile.')
-                    return redirect(f'/complete_profile?email={email}')
-                 else:
-                    flash('Email already verified! You can now log in.')
-                    return redirect('/login')
-            else:
-                flash('This email is not a valid school email address.')
-        else:
-            flash('Your account has not been approved yet.')
-    else:
-        flash('Verification failed. Email not found.')
+    if not email.endswith('@student.mmu.edu.my'):
+        flash('This email is not a valid school email address.')
+        return redirect('/register')
     
-    return redirect('/register')    
+    if user:
+        user.is_verified = True
+        if user.faculty and user.age and user.sex and user.avatar != 'default.jpg':
+            user.verification_status = "Pending Approval"
+        else:
+            user.verification_status = "Verified"
+
+        db.session.commit()
+        flash('Email verified! Please complete your profile.')
+    return redirect(f'/complete_profile?email={email}')
 
 @app.route('/dashboard')
 def dashboard():
@@ -290,6 +391,10 @@ def complete_profile():
         flash('User not found.')
         return redirect('/login')
 
+    if user.verification_status != "Verified":
+        flash('Your email must be verified to complete your profile.')
+        return redirect('/register')
+
     if request.method == 'POST':
         sex = request.form.get('sex')
         race = request.form.get('race')
@@ -307,18 +412,24 @@ def complete_profile():
         if avatar_file and avatar_file.filename != '':
             filename = secure_filename(avatar_file.filename)
             unique_filename = f"{uuid.uuid4().hex}_{filename}"
-            upload_folder = os.path.join('static', 'uploads')
+            upload_folder = os.path.join('static', 'avatar', 'upload')
             os.makedirs(upload_folder, exist_ok=True)
             file_path = os.path.join(upload_folder, unique_filename)
+            print("saving avatar", file_path)
             avatar_file.save(file_path)
             user.avatar = unique_filename
+        
+        else:
+            print("avatar upload failed")
+    
+        if user.is_verified and all([user.age, user.race, user.faculty, user.sex, user.avatar != 'default.jpg']):
+            user.verification_status = "Pending Approval"
 
         db.session.commit()
-        flash('Profile completed successfully!')
-        return redirect('/dashboard')
+        flash('Profile updated successfully. Awaiting admin approval.')
+        return redirect('/login')
 
     return render_template('complete_profile.html', email=email)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
