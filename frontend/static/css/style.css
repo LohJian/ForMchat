@@ -3,7 +3,8 @@ body {
     font-family: 'Arial', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #ffffff;
+    background-color: #FFD3B6;
+    color: #3A3A3A;
 }
 
 .navbar {
@@ -35,6 +36,13 @@ body {
     color: #333;
 }
 
+.body-color{
+    background: linear-gradient(135deg, #ffffff 0%,#fff0f3 100% );
+}
+
+.fot-color{
+    background: linear-gradient(135deg, #ffffff 0%,#fff0f3 100% );
+}
 /* From Uiverse.io */ 
 button {
     position: relative;
@@ -645,6 +653,33 @@ input[type="file"] {
 .upload-hint:hover {
     background: #2980b9;
 }
+body {
+    background-color: #f8f9fa;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+    transition: all 0.3s ease;
+}
+
+.jumbotron {
+    background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+    color: white;
+    border-radius: 15px;
+}
+
+
 
 /* for chatbutton in mainpage */ 
 chat-button-container {
@@ -702,17 +737,88 @@ chat-button-container {
     transition-duration: 1s;
 }
 
-@media (max-width: 768px) {
-    .username-container {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.8rem;
-    }
-
-    .InstagramBtn {
-        padding: 0.3rem 0.8rem;
-    }
+/* design in mainpage */ 
+body {
+    background-color: #f8f9fa;
 }
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+    transition: all 0.3s ease;
+}
+
+.jumbotron {
+    background: linear-gradient(135deg, #7FB3B8 0%, #B8A7D0 100%);
+    color: white;
+    border-radius: 15px;
+}
+
+.start-matching-btn {
+    background: linear-gradient(135deg, #E8B662 0%, #E0967F 100%);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.start-matching-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* design in base menu bars */
+.dropbtn {
+  background-color: #4CAF50;
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  right:0;
+}
+
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {background-color: #f1f1f1}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.dropdown:hover .dropbtn {
+  background-color: #3e8e41;
+}
+
+
 /* 响应式设计 */
 @media (max-width: 768px) {
     .profile-container {

@@ -7,6 +7,7 @@ from sqlalchemy.sql import func
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from flask import Flask, session, render_template, request, redirect, url_for, flash
+from jinja2 import FileSystemLoader
 from sqlalchemy import Column, Integer, ForeignKey, MetaData, create_engine
 from sqlalchemy.orm import relationship
 import pytz
@@ -14,6 +15,15 @@ import sqlite3
 import secrets
 
 app = Flask(__name__)
+project_root = os.path.abspath(os.path.dirname('ForMchat'))
+template_paths = [
+    os.path.join(project_root, 'templates'),          # For templates in the same folder as app.py
+    os.path.join(project_root, '../frontend/templates'),    # Frontend templates
+    os.path.join(project_root, '../website/templates'),    # Your templates
+    os.path.join(project_root, '../website 2/templates')   # Friend's templates
+
+]
+app.jinja_loader = FileSystemLoader(template_paths)
 app.config['SECRET_KEY'] = 'your-very-secret-key-here'
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
@@ -23,6 +33,7 @@ app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///C:/Users/user/Projects/ForMchat/frontend/users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 
 metadata = MetaData()
 db = SQLAlchemy(app, session_options={"future": True}, metadata=metadata)
@@ -288,12 +299,49 @@ def edit_profile(user_id):
             app.logger.error(f"Error in edit_profile: {e}")
     
     return render_template('edit_profile.html', user=user)
-
+    
 @app.route('/registerhome')
 def registerhome():
-    filepath = os.path.join('website 2', 'templates', 'home.html')
-    with open(filepath, 'r', encoding='utf-8') as f:
-        return f.read()
+    return render_template('home.html')  # Your HTML
+
+@app.route('/homepage')
+def homepage():
+    return render_template('homepage.html')  # Friend's HTML
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+
+        if not email.endswith('@student.mmu.edu.my'):
+            flash('Please use your school email to register.')
+            return redirect('/register')
+        
+        if password != confirm_password:
+            flash('Passwords do not match!')
+            return redirect('/register')
+
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            flash('Email already registered.')
+            return redirect('/register')
+
+        hashed_password = generate_password_hash(password)
+        new_user = User(username=username, email=email, password=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+
+        if send_verification_email(email):
+            flash('Registration successful. Please verify your email to complete your profile.')
+        else:
+            flash('There was an issue sending the verification email. Please try again.')
+        
+        return redirect('/register')
+
+    return render_template('register.html')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000) 

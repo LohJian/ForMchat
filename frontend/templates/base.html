@@ -11,26 +11,24 @@
 <body>    
     <nav class="navbar">
     <!-- From Uiverse.io by zymantas-katinas --> 
-        <button class="button" onclick="window.location.href='/'">
+        <button class="button" onclick="window.location.href='/mainpage'">
             <span class="shadow"></span>
                 <span class="edge"></span>
                     <div class="front">
                 <span>ForMchat</span>
             </div>
         </button>
-        <label class="event-wrapper">
-            <input type="checkbox" checked="" class="event-wrapper-inp" />
-                <div class="bar">
-                    <span class="top bar-list"></span>
-                    <span class="middle bar-list"></span>
-                    <span class="bottom bar-list"></span>
+        
+        <div class="dropdown">
+            <span>Menu</span>
+                <div class="dropdown-content">
+                    <a href="chatpage.html"> Inbox </a>
+                    <a href="#"> Settings </a>
+                    <a href="{{ url_for('profile-page', user_id=user.id) }}"> Profile </a>
+                    <a href="{{ url_for('registerhome', user_id=user.id) }}"> Sign Out </a>
+            </div>
                 </div>
-                <section class="menu-container">
-                    <div class="menu-list" onclick="window.location.href='/profile/1'">Profile</div>
-                    <div class="menu-list" onclick="window.location.href='/chat'">Chat</div>
-                    <div style="color:crimson;" class="menu-list" onclick="window.location.href='/'">Settings</div>
-                </section>
-        </label>
+        </div>
     </nav>
 
     <main>
@@ -47,8 +45,10 @@
         {% endblock %}
     </main>
 
-    <footer>
-        <p>© 2025 ForMchat. All rights reserved.</p>
+    <footer>  
+        <div class="fot-color">   
+            <p>© 2025 ForMchat. All rights reserved.</p>   
+        </div>
     </footer>
 </body>
 </html>
