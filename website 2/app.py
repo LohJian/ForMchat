@@ -8,11 +8,15 @@ from email.mime.multipart import MIMEMultipart
 from flask_migrate import Migrate
 import uuid
 from werkzeug.utils import secure_filename
+from datetime import datetime
+from datetime import timedelta
+from apscheduler.schedulers.background import BackgroundScheduler
+import atexit
 
 app = Flask(__name__)
 app.secret_key = 'ForMchat1234'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-UPLOAD_FOLDER = 'static/avatar/upload'
+UPLOAD_FOLDER = os.path.join('static', 'upload')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 db = SQLAlchemy(app)
@@ -38,6 +42,8 @@ class User(db.Model):
     avatar = db.Column(db.String(200), default='default.jpg')
     likes = db.Column(db.Integer, default=0)
     loves = db.Column(db.Integer, default=0)
+    last_login = db.Column(db.DateTime, default=datetime.utcnow)
+    login_count = db.Column(db.Integer, default=0)
 
 with app.app_context():
     db.create_all()
@@ -317,6 +323,9 @@ def login():
         if user and check_password_hash(user.password, password):
             if user.verification_status == "Approved":
                 session['user_id'] = user.id
+                user.last_login = datetime.utcnow()
+                user.login_count += 1
+                db.session.commit()
                 flash('Login successful!')
                 return redirect('/dashboard')
             elif user.verification_status == "Rejected":
@@ -331,8 +340,30 @@ def login():
         else:
             flash('Invalid email or password')
             return redirect('/login')
-    
+        
+        
     return render_template('login.html')
+
+@app.route('/top-active')
+def top_active_users():
+    one_week_ago = datetime.utcnow() - timedelta(days=7)
+    
+    top_users = User.query.filter(User.last_login >= one_week_ago)\
+                          .order_by(User.login_count.desc())\
+                          .limit(5).all()
+    
+    return render_template('top_active.html', users=top_users)
+
+def reset_weekly_logins():
+    with app.app_context():
+        User.query.update({User.login_count: 0})
+        db.session.commit()
+        print("Weekly Leaderboard reset.")
+    
+scheduler = BackgroundScheduler()
+scheduler.add_job(reset_weekly_logins, trigger='cron', day_of_week='mon', hour=0, minute=0)
+scheduler.start()
+atexit.register(lambda: scheduler.shutdown())
 
 @app.route('/verify')
 def verify_email():
@@ -412,7 +443,7 @@ def complete_profile():
         if avatar_file and avatar_file.filename != '':
             filename = secure_filename(avatar_file.filename)
             unique_filename = f"{uuid.uuid4().hex}_{filename}"
-            upload_folder = os.path.join('static', 'avatar', 'upload')
+            upload_folder = app.config['UPLOAD_FOLDER']
             os.makedirs(upload_folder, exist_ok=True)
             file_path = os.path.join(upload_folder, unique_filename)
             print("saving avatar", file_path)
