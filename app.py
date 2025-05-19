@@ -26,10 +26,10 @@ from werkzeug.security import generate_password_hash,check_password_hash
 app = Flask(__name__, static_folder='frontend/static')  
 project_root = os.path.abspath(os.path.dirname(__file__))
 template_paths = [
-    os.path.join(project_root, 'templates'),          # For templates in the same folder as app.py
-    os.path.join(project_root, 'frontend/templates'),    # Frontend templates
-    os.path.join(project_root, 'website/templates'),    # Your templates
-    os.path.join(project_root, 'website 2/templates')   # Friend's templates
+    os.path.join(project_root, 'templates'),         
+    os.path.join(project_root, 'frontend/templates'),    
+    os.path.join(project_root, 'website/templates'),    
+    os.path.join(project_root, 'website 2/templates')   
 
 ]
 app.jinja_loader = FileSystemLoader(template_paths)
