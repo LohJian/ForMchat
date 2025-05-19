@@ -64,15 +64,15 @@
     <div class="container">
         <h2>Complete Your Profile</h2>
         <form method="POST" enctype="multipart/form-data">
-            <label>Sex:</label>
-            <select name="sex" required>
+            <label for="sex">Sex:</label>
+            <select name="sex" id="sex" required>
                 <option value="">Select</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
             </select>
 
-            <label>Race:</label>
-            <select name="race" required>
+            <label for="race">Race:</label>
+            <select name="race" id="race" required>
                 <option value="">Select your race</option>
                 <option value="Chinese">Chinese</option>
                 <option value="Malays">Malays</option>
@@ -80,8 +80,8 @@
                 <option value="Other">Other</option>
             </select>
 
-            <label>Faculty:</label>
-            <select name="faculty" required>
+            <label for="faculty">Faculty:</label>
+            <select name="faculty" id="faculty" required>
                 <option value="">Select your faculty</option>
                 <option value="FCI">FCI</option>
                 <option value="FAIE">FAIE</option>
@@ -93,14 +93,14 @@
                 <option value="FOL">FOL</option>
             </select>
 
-            <label>Age:</label>
-            <input type="number" name="age" min="16" max="99" required>
+            <label for="age">Age:</label>
+            <input type="number" name="age" id="age" min="16" max="99" required>
 
-            <label>Location:</label>
-            <input type="text" name="location" required>
+            <label for="location">Location:</label>
+            <input type="text" name="location" id="location" required>
 
-            <label>Upload Avatar:</label>
-            <input type="file" name="avatar">
+            <label for="avatar">Upload Avatar:</label>
+            <input type="file" name="avatar" id="avatar" accept="image/*">
 
             <button type="submit">Submit Profile</button>
         </form>
