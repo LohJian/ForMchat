@@ -1,6 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<<<<<<< HEAD
+    <meta charset="UTF-8">
+    <title>Find Your Match</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom right, #fdfbfb, #ebedee);
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 300px;
+            background-color: #ffffff;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .sidebar h2 {
+            margin-top: 0;
+        }
+        .sidebar .user {
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: #f1f1f1;
+            border-radius: 10px;
+        }
+        .sidebar .user h3 {
+            margin: 0;
+        }
+        .sidebar .user form {
+            margin-top: 5px;
+        }
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        .profile-card {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 400px;
+        }
+        .profile-card h1 {
+            margin-top: 0;
+        }
+        .actions {
+            margin-top: 20px;
+        }
+        .actions form {
+            display: inline-block;
+        }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .chat-btn {
+            background-color: #007bff;
+        }
+        .chat-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>Interested Users</h2>
+            {% for user in liked_users %}
+                <div class="user">
+                    <h3>{{ user.name }}</h3>
+                    <p>{{ user.age }} | {{ user.faculty }}</p>
+                    <form action="{{ url_for('chat', other_user_id=user.id) }}">
+                        <button class="btn chat-btn">Chat now!!</button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="main">
+            <div class="profile-card">
+                <h1>{{ match.name }}</h1>
+                <p>Age: {{ match.age }}</p>
+                <p>Gender: {{ match.gender }}</p>
+                <p>Faculty: {{ match.faculty }}</p>
+                <div class="actions">
+                    {% if not already_liked %}
+                        <form action="{{ url_for('like_user', liked_id=match.id, index=index) }}" method="post">
+                            <button class="btn">Interested</button>
+                        </form>
+                    {% else %}
+                        <p>You're already interested!</p>
+                    {% endif %}
+                    <form action="{{ url_for('show_match', index=(index + 1) % total) }}" method="get">
+                        <button class="btn">Next</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+=======
   <meta charset="UTF-8">
   <title>💕 Matchmaker Results</title>
   <style>
@@ -55,3 +174,4 @@
 
 </body>
 </html>
+>>>>>>> 0bf4c344bbaa633f40c0d536e77679baf4dc0e8b

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Chat with {{ other_user['name'] }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; }
+        .chat-box { border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: scroll; background: #f9f9f9; }
+        .message { margin: 5px 0; padding: 8px; border-radius: 8px; max-width: 70%; }
+        .sent { background-color: #DCF8C6; text-align: right; margin-left: auto; }
+        .received { background-color: #fff; text-align: left; margin-right: auto; }
+        form { margin-top: 10px; display: flex; }
+        input[type="text"] { flex: 1; padding: 8px; font-size: 1em; }
+        button { padding: 8px 16px; }
+        a.profile-link { display: inline-block; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <a href="{{ url_for('view_profile', user_id=other_user['id']) }}" class="profile-link">View {{ other_user['name'] }}'s Profile</a>
+
+    <div class="chat-box" id="chat-box">
+        {% for msg in chat_history %}
+            {% if msg['sender_id'] == user['id'] %}
+                <div class="message sent">{{ msg['message'] }}</div>
+            {% else %}
+                <div class="message received">{{ msg['message'] }}</div>
+            {% endif %}
+        {% else %}
+            <p>No messages yet. Say hi!</p>
+        {% endfor %}
+    </div>
+
+    <form method="post">
+        <input type="text" name="message" placeholder="Type your message..." autocomplete="off" required />
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+      // Auto scroll to the bottom of chat
+      const chatBox = document.getElementById('chat-box');
+      chatBox.scrollTop = chatBox.scrollHeight;
+    </script>
+</body>
+</html>
