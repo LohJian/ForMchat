@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome to ForMchat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #f2f4f3, #e6e1dc);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #333;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 50px 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 90%;
+      max-width: 450px;
+    }
+
+    .logo {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+    }
+
+    .tagline {
+      font-size: 1rem;
+      color: #777;
+      margin-bottom: 30px;
+    }
+
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .btn {
+      background: linear-gradient(to right, #ff758c, #ff758c);
+      color: white;
+      padding: 14px 0;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: 0.3s ease;
+    }
+
+    .btn:hover {
+      background: linear-gradient(to right, #ff99ac, #ff758c);
+      transform: scale(1.03);
+    }
+
+    @media (min-width: 500px) {
+      .button-group {
+        flex-direction: row;
+        justify-content: center;
+      }
+
+      .btn {
+        width: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">💌</div>
+    <h1>Welcome to ForMchat</h1>
+    <p class="tagline">More than just classmates — connect, chat, and fall in love 💘</p>
+    
+    <div class="button-group">
+      <a href="/register" class="btn">Register</a>
+      <a href="/login" class="btn">Login</a>
+    </div>
+  </div>
+</body>
+</html>
