@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chatroom</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: black;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #1d1d1d;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .chat-header h2 {
+            color: pink;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .chat-box {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 5px;
+            height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .message .sender {
+            font-weight: bold;
+            color: pink;
+        }
+        .message .text {
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 70%;
+            margin-top: 5px;
+        }
+        .message.local .text {
+            background-color: pink;
+            color: black;
+            align-self: flex-end;
+        }
+        .message.target .text {
+            background-color: black;
+            color: white;
+            align-self: flex-start;
+        }
+        .input-area {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .input-area input {
+            width: 80%;
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid #555;
+            background-color: #222;
+            color: white;
+        }
+        .input-area button {
+            background-color: pink;
+            color: black;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .input-area button:hover {
+            background-color: #ff66b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="chat-header">
+        <h2>{{ target_user['username'] }}</h2>
+        <a href="{{ url_for('profile', user_id=target_user['id']) }}">View Profile</a>
+    </div>
+
+    <div class="chat-box">
+        {% for msg in messages %}
+            <div class="message {% if msg.sender_id == local_user['id'] %}local{% else %}target{% endif %}">
+                <span class="sender">{{ target_user['username'] if msg.sender_id != local_user['id'] else 'You' }}</span>
+                <span class="text">{{ msg.text }}</span>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="input-area">
+        <form method="POST" action="">
+            <input type="text" name="text" placeholder="Type your message..." required>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
