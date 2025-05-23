@@ -3,7 +3,14 @@ import sqlite3
 
 app = Flask(__name__)
 
-local_user = {"id": 99, "name": "Yu Zhe", "age": 21, "gender": "Male", "faculty": "Computing"}
+local_user = {
+    "id": 99,
+    "name": "Yu Zhe",
+    "age": 21,
+    "gender": "Male",
+    "faculty": "Computing",
+    "race": "Chinese"
+}
 
 def get_db_connection():
     conn = sqlite3.connect('users.db')
@@ -12,31 +19,56 @@ def get_db_connection():
 
 @app.route('/')
 def home():
-    return redirect(url_for('show_match', index=0))
+    return redirect(url_for('show_match'))
 
-@app.route('/matches/<int:index>')
-def show_match(index):
+@app.route('/matches')
+def show_match():
     conn = get_db_connection()
-    users = conn.execute("SELECT * FROM users WHERE gender = 'Female'").fetchall()
-    total = len(users)
-    if index >= total:
-        return redirect(url_for('show_match', index=0))
-    match = users[index]
-    likes = conn.execute("SELECT liked_id FROM likes WHERE liker_id = ?", (local_user['id'],)).fetchall()
-    liked_user_ids = {like['liked_id'] for like in likes}
-    already_liked = match['id'] in liked_user_ids
-    liked_users = conn.execute("SELECT * FROM users WHERE id IN ({seq})".format(
-        seq=','.join(['?']*len(liked_user_ids)) if liked_user_ids else '0'), tuple(liked_user_ids)).fetchall() if liked_user_ids else []
-    conn.close()
-    return render_template('matches.html', match=match, index=index, total=total, already_liked=already_liked, liked_users=liked_users)
 
-@app.route('/like/<int:liked_id>/<int:index>', methods=['POST'])
-def like_user(liked_id, index):
+    reacted_users = conn.execute(
+        "SELECT liked_id FROM likes WHERE liker_id = ? UNION SELECT disliked_id FROM dislikes WHERE disliker_id = ?",
+        (local_user['id'], local_user['id'])
+    ).fetchall()
+    reacted_ids = [row[0] for row in reacted_users]
+
+    if reacted_ids:
+        reacted_filter = "AND id NOT IN ({})".format(','.join(['?'] * len(reacted_ids)))
+    else:
+        reacted_filter = ""
+
+    query = f"""
+        SELECT * FROM users
+        WHERE id != ?
+        {reacted_filter}
+        AND ABS(age - ?) <= 5
+        LIMIT 1
+    """
+
+    params = [local_user['id']] + reacted_ids + [local_user['age']] if reacted_ids else [local_user['id'], local_user['age']]
+    match = conn.execute(query, params).fetchone()
+
+    liked_users = conn.execute(
+        "SELECT * FROM users WHERE id IN (SELECT liked_id FROM likes WHERE liker_id = ?)",
+        (local_user['id'],)
+    ).fetchall()
+    conn.close()
+    return render_template('matches.html', match=match, liked_users=liked_users)
+
+@app.route('/like/<int:liked_id>', methods=['POST'])
+def like_user(liked_id):
     conn = get_db_connection()
     conn.execute("INSERT OR IGNORE INTO likes (liker_id, liked_id) VALUES (?, ?)", (local_user['id'], liked_id))
     conn.commit()
     conn.close()
-    return redirect(url_for('show_match', index=index + 1))
+    return redirect(url_for('show_match'))
+
+@app.route('/dislike/<int:disliked_id>', methods=['POST'])
+def dislike_user(disliked_id):
+    conn = get_db_connection()
+    conn.execute("INSERT OR IGNORE INTO dislikes (disliker_id, disliked_id) VALUES (?, ?)", (local_user['id'], disliked_id))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('show_match'))
 
 @app.route('/chat/<int:other_user_id>', methods=['GET', 'POST'])
 def chat(other_user_id):
@@ -46,6 +78,7 @@ def chat(other_user_id):
     if not other_user:
         conn.close()
         return "User not found", 404
+
     if request.method == 'POST':
         msg = request.form['message']
         if msg.strip():
@@ -54,6 +87,7 @@ def chat(other_user_id):
                 (user['id'], other_user_id, msg)
             )
             conn.commit()
+
     chat_history = conn.execute(
         "SELECT sender_id, receiver_id, message, timestamp FROM messages WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) ORDER BY timestamp",
         (user['id'], other_user_id, other_user_id, user['id'])
