@@ -1,7 +1,5 @@
-{% extends "base.html" %}
-
-{% block content %}
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,36 +7,46 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body>
-    <div class="body-color">
-    <div class="main-back">
-
-        <a href="{{ url_for('userprofile-page', user_id=user.id) }}" class="profile-link">
-            View My Profile
-        </a>
-    </div>
-
-
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#">ForMchat</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('profile-page', user_id=user.id) }}">Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('chat') }}">Messages</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
 
     <div class="container-fluid mt-4">
         <div class="row">
+            <!-- Main Content Area -->
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header">
-                        <h3>Welcome to ForMchat, {{ user.username }}! 😶‍🌫️</h3>
+                        <h3>Welcome to ForMchat, {{ user.username }}! ❤️</h3>
                     </div>
                     <div class="card-body">
+                        <!-- Your main content here -->
                         <div class="jumbotron">
                             <h1 class="display-4">Find Your Perfect Match</h1>
                             <p class="lead">Connect with like-minded individuals in your area</p>
                             <hr class="my-4">
-                            <a class="btn start-matching-btn btn-lg" role="button">Start Matching</a>
+                            <a class="btn btn-danger btn-lg" href="{{ url_for('userprofile-page', user_id=1) }}" role="button">Start Matching</a>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Right Sidebar - Active Users -->
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header bg-info text-white">
@@ -62,9 +70,17 @@
             </div>
         </div>
     </div>
-    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container">
+            <span class="text-muted">© 2023 ForMchat - Connecting Hearts</span>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
-{% endblock %}
+</html>

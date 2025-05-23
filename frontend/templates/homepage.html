@@ -32,7 +32,12 @@
             justify-content: space-between;
             align-items: center;
             padding: 1.5rem 5%;
-            background-color: white;
+            background-color: linear-gradient(
+                to right,
+                #ffd6e0 0%,     
+                #ffebf3 50%,    
+                #ffe8d6 100%    
+            );
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             position: fixed;
             width: 100%;
@@ -155,7 +160,12 @@
         .features {
             padding: 5rem 5%;
             text-align: center;
-            background-color: white;
+            background: linear-gradient(
+            to right,
+            #ffd6e0 0%,     
+            #ffebf3 50%,    
+            #ffe8d6 100%    
+        );
         }
         
         .section-title {
@@ -404,22 +414,20 @@
 </head>
 <body>
     <nav>
-        <div class="logo">ForM<span>chat</span></div>
+        <div class="logo"><span>ForMchat</span></div>
         <div class="nav-links">
             <a href="#">Home</a>
             <a href="#">How It Works</a>
-            <a href="#">Success Stories</a>
-            <a href="#">Pricing</a>
         </div>
-        <button class="cta-button">Get Started</button>
+        <button class="cta-button" onclick="window.location.href='/registerhome'">Get Started</button>
     </nav>
     
     <section class="hero">
         <div class="hero-content">
             <h1>Find Your <span>Perfect Match</span> Today</h1>
-            <p>HeartLink uses advanced compatibility matching to connect you with people who share your values, interests, and relationship goals.</p>
+            <p>ForMchat uses advanced compatibility matching to connect you with people who share your values, interests, and relationship goals.</p>
             <div class="hero-buttons">
-                <button class="cta-button">Create Profile</button>
+                <button class="cta-button" onclick="window.location.href='/registerhome'">Create Profile</button>
             </div>
         </div>
         <div class="hero-image">
@@ -462,7 +470,7 @@
     <section class="cta-section">
         <h2>Ready to Find Your Perfect Match?</h2>
         <p>Join and found meaningful connection between intimate friend through ForMchat. Your journey to found intimate friend here.</p>
-        <button class="white-button">Sign Up Free</button>
+        <button class="white-button" onclick="window.location.href='/registerhome'">Sign Up</button>
     </section>
     
     <footer>
