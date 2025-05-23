@@ -470,11 +470,11 @@ def complete_profile():
 
 @app.route('/registerhome')
 def registerhome():
-    return render_template('home.html')  # Your HTML
+    return render_template('home.html')  
 
 @app.route('/homepage')
 def homepage():
-    return render_template('homepage.html')  # Friend's HTML
+    return render_template('homepage.html')  
 
 if __name__ == '__main__':
     app.run(debug=True)
