@@ -52,11 +52,10 @@
             border-radius: 5px;
         }
     </style>
-</head>
-<body>
+
     <div class="chat-header">
         <h2>Chat with {{ other_user.name }}</h2>
-        <a class="profile-btn" href="{{ url_for('profile-page', user_id=other_user.id) }}">View Profile</a>
+        <a class="profile-btn" href="{{ url_for('view_profile', user_id=other_user.id) }}">View Profile</a>
     </div>
 
     <div class="chat-box">
@@ -73,8 +72,4 @@
         <input type="text" name="message" placeholder="Type your message..." required>
         <button type="submit">Send</button>
     </form>
-</body>
-</html>
-
-
 {% endblock %}
