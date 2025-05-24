@@ -22,14 +22,14 @@ from flask import Flask, render_template, request, redirect, flash ,session
 from werkzeug.security import generate_password_hash,check_password_hash
 
 
-
 app = Flask(__name__, static_folder='frontend/static')  
 project_root = os.path.abspath(os.path.dirname(__file__))
 template_paths = [
     os.path.join(project_root, 'templates'),         
     os.path.join(project_root, 'frontend/templates'),    
-    os.path.join(project_root, 'website/templates'),    
-    os.path.join(project_root, 'website 2/templates')   
+    os.path.join(project_root, 'ash/templates'),    
+    os.path.join(project_root, 'website 2/templates'),   
+    os.path.join(project_root, 'website/templates')   
 
 ]
 app.jinja_loader = FileSystemLoader(template_paths)
@@ -98,8 +98,22 @@ class Love(db.Model):
     session_id = db.Column(db.String(50), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
 
+local_user = {
+    "id": 99,
+    "name": "Yu Zhe",
+    "age": 21,
+    "gender": "Male",
+    "faculty": "Computing",
+    "race": "Chinese"
+}
+
 with app.app_context():
     db.create_all()
+
+def get_db_connection():
+    conn = sqlite3.connect('users.db')
+    conn.row_factory = sqlite3.Row
+    return conn
 
 @app.before_request
 def before_request():
@@ -181,11 +195,10 @@ def home():
 
 @app.route('/profile/<int:user_id>', endpoint='profile-page')
 def profile(user_id):
+
     user = User.query.get_or_404(user_id)
-    
     like_count = len(user.likes_received)
-    love_count = len(user.loves_received)
-    
+    love_count = len(user.loves_received)  
     return render_template('profile.html',
                         user=user,
                         like_count=like_count,
@@ -196,11 +209,9 @@ def user_profile(user_id):
     """Show other users' profiles (with interaction)"""
     user = User.query.get_or_404(user_id)
     
-    # Get counts
     like_count = Like.query.filter_by(target_user_id=user_id).count()
     love_count = Love.query.filter_by(target_user_id=user_id).count()
     
-    # Check if current session has already liked/loved
     has_liked = Like.query.filter_by(
         target_user_id=user_id,
         session_id=session['session_id']
@@ -223,7 +234,6 @@ def like(user_id):
     if 'session_id' not in session:
         session['session_id'] = secrets.token_hex(16)
 
-    # Check if already liked
     existing_like = Like.query.filter_by(
         user_id=user_id,
         session_id=session['session_id']
@@ -233,7 +243,6 @@ def like(user_id):
         flash("You've already liked this profile!", 'info')
         return redirect(url_for('userprofile-page', user_id=user_id))
 
-    # Create new like
     new_like = Like(
         user_id=user_id,
         target_user_id=request.form['receiver_id'],
@@ -249,7 +258,6 @@ def love(user_id):
     if 'session_id' not in session:
         session['session_id'] = secrets.token_hex(16)
 
-    # Check if already loved
     existing_love = Love.query.filter_by(
         user_id=user_id,
         session_id=session['session_id']
@@ -259,7 +267,6 @@ def love(user_id):
         flash("You've already loved this profile!", 'info')
         return redirect(url_for('userprofile-page', user_id=user_id))
 
-    # Create new love
     new_love = Love(
         user_id=user_id,
         target_user_id=request.form['receiver_id'],
@@ -269,10 +276,6 @@ def love(user_id):
     db.session.add(new_love)
     db.session.commit()
     return redirect(url_for('userprofile-page', user_id=user_id))
-
-@app.route('/chat')
-def chat():
-    return render_template('chatpage.html')
 
 @app.route('/test-save')
 def test_save():
@@ -320,10 +323,11 @@ def edit_profile(user_id):
     
 @app.route('/registerhome')
 def registerhome():
-    return render_template('home.html')  # Your HTML
+    return render_template('home.html')  
 
-
-
+@app.route('/matching')
+def matching():
+    return render_template('matches.html')  
 
 
 # Yuzhe part
@@ -719,6 +723,98 @@ def complete_profile():
         return redirect('/login')
 
     return render_template('complete_profile.html', email=email)
+
+
+
+# Ashton part
+@app.route('/show')
+def show():
+    return redirect(url_for('show_match'))
+
+@app.route('/matches')
+def show_match():
+    conn = get_db_connection()
+
+    reacted_users = conn.execute(
+        "SELECT liked_id FROM likes WHERE liker_id = ? UNION SELECT disliked_id FROM dislikes WHERE disliker_id = ?",
+        (local_user['id'], local_user['id'])
+    ).fetchall()
+    reacted_ids = [row[0] for row in reacted_users]
+
+    reacted_filter = "AND id NOT IN ({})".format(','.join(['?'] * len(reacted_ids))) if reacted_ids else ""
+
+    query = f"""
+        SELECT * FROM users
+        WHERE id != ?
+        {reacted_filter}
+        AND ABS(age - ?) <= 5
+        LIMIT 1
+    """
+    params = [local_user['id']] + reacted_ids + [local_user['age']] if reacted_ids else [local_user['id'], local_user['age']]
+    match = conn.execute(query, params).fetchone()
+
+    liked_users = conn.execute(
+        "SELECT * FROM users WHERE id IN (SELECT liked_id FROM likes WHERE liker_id = ?)",
+        (local_user['id'],)
+    ).fetchall()
+
+    conn.close()
+    return render_template('matches.html', match=match, liked_users=liked_users)
+
+@app.route('/like/<int:liked_id>', methods=['POST'])
+def like_user(liked_id):
+    conn = get_db_connection()
+    conn.execute(
+        "INSERT OR IGNORE INTO likes (liker_id, liked_id) VALUES (?, ?)",
+        (local_user['id'], liked_id)
+    )
+    conn.commit()
+    conn.close()
+    return redirect(url_for('show_match'))
+
+@app.route('/dislike/<int:disliked_id>', methods=['POST'])
+def dislike_user(disliked_id):
+    conn = get_db_connection()
+    conn.execute(
+        "INSERT OR IGNORE INTO dislikes (disliker_id, disliked_id) VALUES (?, ?)",
+        (local_user['id'], disliked_id)
+    )
+    conn.commit()
+    conn.close()
+    return redirect(url_for('show_match'))
+
+@app.route('/chat/<int:other_user_id>', methods=['GET', 'POST'])
+def chat(other_user_id):
+    conn = get_db_connection()
+
+    other_user = conn.execute("SELECT * FROM users WHERE id = ?", (other_user_id,)).fetchone()
+    if not other_user:
+        conn.close()
+        return "User not found", 404
+
+    if request.method == 'POST':
+        msg = request.form['message']
+        if msg.strip():
+            conn.execute(
+                "INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)",
+                (local_user['id'], other_user_id, msg)
+            )
+            conn.commit()
+
+    chat_history = conn.execute(
+        """
+        SELECT sender_id, receiver_id, message, timestamp
+        FROM messages
+        WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)
+        ORDER BY timestamp
+        """,
+        (local_user['id'], other_user_id, other_user_id, local_user['id'])
+    ).fetchall()
+
+    conn.close()
+    return render_template('chat.html', user=local_user, other_user=other_user, chat_history=chat_history)
+
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000) 

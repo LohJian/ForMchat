@@ -1,7 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Chat with {{ other_user.name }}</title>
+{% extends "base.html" %}
+
+{% block title %}Chat with {{ other_user.name }}{% endblock %}
+
+{% block content %}
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -55,7 +56,7 @@
 <body>
     <div class="chat-header">
         <h2>Chat with {{ other_user.name }}</h2>
-        <a class="profile-btn" href="{{ url_for('view_profile', user_id=other_user.id) }}">View Profile</a>
+        <a class="profile-btn" href="{{ url_for('profile-page', user_id=other_user.id) }}">View Profile</a>
     </div>
 
     <div class="chat-box">
@@ -74,3 +75,6 @@
     </form>
 </body>
 </html>
+
+
+{% endblock %}

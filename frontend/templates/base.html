@@ -22,7 +22,9 @@
         <div class="dropdown">
             <span>Menu</span>
                 <div class="dropdown-content">
-                    <a href="chatpage.html"> Inbox </a>
+                    {% if other_user is defined %}
+                    <a href="{{ url_for('chat', user_id=other_user.id) }}"> ChatRoom </a>
+                    {% endif %}
                     <a href="#"> Settings </a>
                     <a href="{{ url_for('profile-page', user_id=user.id) }}"> Profile </a>
                     <a href="{{ url_for('registerhome', user_id=user.id) }}"> Sign Out </a>
