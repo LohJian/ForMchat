@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <a class="navbar-brand" href="#">ForMchat</a>
         <div class="collapse navbar-collapse">
@@ -28,14 +27,12 @@
 
     <div class="container-fluid mt-4">
         <div class="row">
-            <!-- Main Content Area -->
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header">
                         <h3>Welcome to ForMchat, {{ user.username }}! ❤️</h3>
                     </div>
                     <div class="card-body">
-                        <!-- Your main content here -->
                         <div class="jumbotron">
                             <h1 class="display-4">Find Your Perfect Match</h1>
                             <p class="lead">Connect with like-minded individuals in your area</p>
@@ -46,7 +43,6 @@
                 </div>
             </div>
 
-            <!-- Right Sidebar - Active Users -->
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header bg-info text-white">
@@ -71,14 +67,12 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="footer mt-auto py-3 bg-light">
         <div class="container">
             <span class="text-muted">© 2023 ForMchat - Connecting Hearts</span>
         </div>
     </footer>
 
-    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
