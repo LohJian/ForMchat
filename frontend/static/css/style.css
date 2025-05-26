@@ -5,6 +5,13 @@ body {
     padding: 0;
     background-color: #FFD3B6;
     color: #3A3A3A;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
 }
 
 .navbar {
@@ -36,8 +43,13 @@ body {
     color: #333;
 }
 
-.body-color{
+.body-color {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
     background: linear-gradient(135deg, #ffffff 0%,#fff0f3 100% );
+    height: calc(100vh - 140px);
 }
 
 .fot-color{
@@ -653,19 +665,11 @@ input[type="file"] {
 .upload-hint:hover {
     background: #2980b9;
 }
-body {
-    background-color: #f8f9fa;
-}
 
 .card {
     box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
 }
 
-.footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-}
 
 .list-group-item:hover {
     background-color: #f8f9fa;
@@ -746,10 +750,11 @@ body {
     box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
 }
 
-.footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
+footer {
+    background: #ffffff;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
 }
 
 .list-group-item:hover {
@@ -777,6 +782,7 @@ body {
 }
 
 /* design in base menu bars */
+
 .dropbtn {
   background-color: #4CAF50;
   color: white;
@@ -818,7 +824,260 @@ body {
   background-color: #3e8e41;
 }
 
+/* CHAT INTERFACE STYLES */
+.chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    width: 95%;
+    max-width: 800px;
+    height: calc(100vh - 140px); /* Account for header/footer heights */
+}
 
+.chat-header {
+    padding: 20px;
+    background: linear-gradient(to right, #ff758c, #ff7eb3);
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 15px 15px 0 0;
+    color: white;
+}
+
+.chat-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.profile-btn {
+    background: white;
+    color: #ff758c !important;
+    padding: 8px 20px;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.profile-btn:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px);
+}
+
+.chat-box {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: #f5f6fa;
+}
+
+.message {
+    max-width: 70%;
+    padding: 12px 20px;
+    border-radius: 20px;
+    position: relative;
+    animation: fadeIn 0.3s ease;
+    line-height: 1.4;
+}
+
+.message.you {
+    background: linear-gradient(to right, #4facfe, #00f2fe);
+    color: rgb(0, 0, 0);
+    align-self: flex-end;
+}
+
+.message:not(.you) {
+    background: white;
+    border: 1px solid #eee;
+    align-self: flex-start;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.message-content {
+    word-break: break-word;
+}
+
+.timestamp {
+    font-size: 0.7rem;
+    opacity: 0.8;
+    margin-top: 5px;
+    display: block;
+    text-align: right;
+}
+
+.chat-form {
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 10px;
+    border-radius: 0 0 15px 15px;
+}
+
+.message-input {
+    flex: 1;
+    padding: 12px 20px;
+    border: 1px solid #ddd;
+    border-radius: 25px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.message-input:focus {
+    outline: none;
+    border-color: #4facfe;
+    box-shadow: 0 0 0 3px rgba(79,172,254,0.1);
+}
+
+.send-btn {
+    background: linear-gradient(to right, #ff758c, #ff7eb3);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.send-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Typing indicator */
+.typing-indicator {
+    display: flex;
+    padding: 10px 15px;
+    background: white;
+    border-radius: 20px;
+    align-self: flex-start;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background: #ccc;
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: typingAnimation 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingAnimation {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .chat-container {
+        height: 90vh;
+        margin: 0;
+        border-radius: 0;
+    }
+    
+    .message {
+        max-width: 85%;
+    }
+    
+    .chat-form {
+        padding: 10px 15px;
+    }
+    
+    .send-btn {
+        padding: 12px 20px;
+    }
+}
+
+.site-footer {
+    text-align: center;
+    padding: 20px 0;
+    background-color: #343a40;
+    color: white;
+    margin-top: 30px;
+}
+
+
+@media (max-width: 768px) {
+    .page-container {
+        padding: 0 10px;
+    }
+    
+    .navbar {
+        flex-direction: column;
+        padding: 10px 0;
+    }
+    
+    .dropdown {
+        margin-top: 10px;
+    }
+    
+    .dropdown-content {
+        right: auto;
+        left: 0;
+    }
+}
+
+
+/* Top active */
+.top-active {
+        max-width: 480px;
+        margin: 2rem auto;
+        text-align: center;
+    }
+
+    .leaderboard {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .leaderboard th,
+    .leaderboard td {
+        padding: 0.6rem;
+        border: 1px solid #e0e0e0;
+    }
+
+    .leaderboard thead {
+        background: #ff99ac;
+        color: #fff;
+    }
+
+    .leaderboard tbody tr:nth-child(even) {
+        background: #fafafa;
+    }
+
+    .leaderboard tbody tr:first-child td {
+        font-weight: 700;
+        background: #ffe6ec;
+    }
+
+    /* Bootstrap overrides */
+    .leaderboard.table th,
+    .leaderboard.table td {
+        border-color: #e0e0e0;
+    }
+    
+    .leaderboard thead.bg-warning {
+        background: #ff99ac !important;
+    }
+    
 /* 响应式设计 */
 @media (max-width: 768px) {
     .profile-container {

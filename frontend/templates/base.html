@@ -8,49 +8,43 @@
     <title>{% block title %}Dating App{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>    
-    <nav class="navbar">
-    <!-- From Uiverse.io by zymantas-katinas --> 
-        <button class="button" onclick="window.location.href='/mainpage'">
-            <span class="shadow"></span>
+<body>
+        <nav class="navbar">
+            <button class="button" onclick="window.location.href='/mainpage'">
+                <span class="shadow"></span>
                 <span class="edge"></span>
                     <div class="front">
-                <span>ForMchat</span>
-            </div>
-        </button>
-        
-        <div class="dropdown">
-            <span>Menu</span>
-                <div class="dropdown-content">
-                    {% if other_user is defined %}
-                    <a href="{{ url_for('chat', user_id=other_user.id) }}"> ChatRoom </a>
-                    {% endif %}
-                    <a href="#"> Settings </a>
-                    <a href="{{ url_for('profile-page', user_id=user.id) }}"> Profile </a>
-                    <a href="{{ url_for('registerhome', user_id=user.id) }}"> Sign Out </a>
-            </div>
-                </div>
-        </div>
-    </nav>
-
-    <main>
-        {% block content %}
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="flash-messages">
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }}">{{ message }}</div>
-                        {% endfor %}
+                        <span>ForMchat</span>
                     </div>
-                {% endif %}
-            {% endwith %}
-        {% endblock %}
-    </main>
+            </button>
+            
+            <div class="dropdown">
+                <span>Menu</span>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('chat', other_user_id=user.id) }}"> ChatRoom </a>
+                    <a href="#"> Notification </a>
+                    <a href="{{ url_for('profile-page', user_id=user.id) }}">Profile</a>
+                    <a href="{{ url_for('registerhome', user_id=user.id) }}"> Sign Out </a>
+                </div>      
+            </div>
+        </nav>
 
-    <footer>  
-        <div class="fot-color">   
-            <p>© 2025 ForMchat. All rights reserved.</p>   
-        </div>
-    </footer>
+        <main>
+            {% block content %}
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="flash-messages">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            {% endblock %}
+        </main>
+
+        <footer>   
+                <p>© 2025 ForMchat. All rights reserved.</p>   
+        </footer>
 </body>
 </html>

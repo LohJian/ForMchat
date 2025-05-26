@@ -21,6 +21,8 @@ from email.mime.multipart import MIMEMultipart
 from flask import Flask, render_template, request, redirect, flash ,session
 from werkzeug.security import generate_password_hash,check_password_hash
 
+from sqlalchemy import or_, and_, not_      #Ash part
+from sqlalchemy.sql.expression import func
 
 app = Flask(__name__, static_folder='frontend/static')  
 project_root = os.path.abspath(os.path.dirname(__file__))
@@ -79,6 +81,8 @@ class User(db.Model):
     avatar = db.Column(db.String(100), default=app.config['DEFAULT_AVATAR'])
     likes_received = db.relationship("Like", foreign_keys="Like.target_user_id", backref="target_user")
     loves_received = db.relationship("Love", foreign_keys="Love.target_user_id", backref="target_user")
+    sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='sender')
+    received_messages = db.relationship('Message', foreign_keys='Message.receiver_id', backref='receiver')
 
 
 class Like(db.Model):
@@ -97,6 +101,28 @@ class Love(db.Model):
     target_user_id = db.Column(db.Integer,  db.ForeignKey('user.id'), nullable=False)
     session_id = db.Column(db.String(50), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+class Dislike(db.Model):
+    __tablename__ = 'dislikes'
+    id = db.Column(db.Integer, primary_key=True)
+    disliker_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    disliked_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class Interested(db.Model):
+    __tablename__ = 'interested'
+    id = db.Column(db.Integer, primary_key=True)
+    liker_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    liked_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    message = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, default=datetime.now)
 
 local_user = {
     "id": 99,
@@ -195,14 +221,21 @@ def home():
 
 @app.route('/profile/<int:user_id>', endpoint='profile-page')
 def profile(user_id):
-
-    user = User.query.get_or_404(user_id)
-    like_count = len(user.likes_received)
-    love_count = len(user.loves_received)  
-    return render_template('profile.html',
-                        user=user,
-                        like_count=like_count,
-                        love_count=love_count)
+    try:
+        user = User.query.get_or_404(user_id)
+        like_count = Like.query.filter_by(target_user_id=user_id).count()
+        love_count = Love.query.filter_by(target_user_id=user_id).count()
+        
+        return render_template(
+            'profile.html',
+            user=user,
+            like_count=like_count,
+            love_count=love_count
+        )
+    except Exception as e:
+        app.logger.error(f"Profile Error: {str(e)}")
+        flash("Error loading profile", "error")
+        return redirect(url_for('mainpage'))
 
 @app.route('/user/<int:user_id>', endpoint='userprofile-page')
 def user_profile(user_id):
@@ -732,89 +765,106 @@ def show():
     return redirect(url_for('show_match'))
 
 @app.route('/matches')
-def show_match():
-    conn = get_db_connection()
+def show_matches():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    current_user = User.query.get(session['user_id'])
+    
+    reacted_ids = db.session.query(
+        or_(
+            Interested.liked_id,
+            Dislike.disliked_id
+        )
+    ).filter(
+        or_(
+            Interested.liker_id == current_user.id,
+            Dislike.disliker_id == current_user.id
+        )
+    ).distinct().all()
+    
+    reacted_ids = [id[0] for id in reacted_ids] if reacted_ids else []
 
-    reacted_users = conn.execute(
-        "SELECT liked_id FROM likes WHERE liker_id = ? UNION SELECT disliked_id FROM dislikes WHERE disliker_id = ?",
-        (local_user['id'], local_user['id'])
-    ).fetchall()
-    reacted_ids = [row[0] for row in reacted_users]
+    match = User.query.filter(
+        User.id != current_user.id,
+        ~User.id.in_(reacted_ids),
+        func.abs(User.age - current_user.age) <= 5
+    ).order_by(func.random()).first()
 
-    reacted_filter = "AND id NOT IN ({})".format(','.join(['?'] * len(reacted_ids))) if reacted_ids else ""
+    interested_users = User.query.join(
+        Interested, 
+        User.id == Interested.liked_id
+    ).filter(
+        Interested.liker_id == current_user.id
+    ).all()
 
-    query = f"""
-        SELECT * FROM users
-        WHERE id != ?
-        {reacted_filter}
-        AND ABS(age - ?) <= 5
-        LIMIT 1
-    """
-    params = [local_user['id']] + reacted_ids + [local_user['age']] if reacted_ids else [local_user['id'], local_user['age']]
-    match = conn.execute(query, params).fetchone()
-
-    liked_users = conn.execute(
-        "SELECT * FROM users WHERE id IN (SELECT liked_id FROM likes WHERE liker_id = ?)",
-        (local_user['id'],)
-    ).fetchall()
-
-    conn.close()
-    return render_template('matches.html', match=match, liked_users=liked_users)
-
-@app.route('/like/<int:liked_id>', methods=['POST'])
-def like_user(liked_id):
-    conn = get_db_connection()
-    conn.execute(
-        "INSERT OR IGNORE INTO likes (liker_id, liked_id) VALUES (?, ?)",
-        (local_user['id'], liked_id)
+    return render_template(
+        'matches.html',
+        match=match,
+        interested_users=interested_users,
+        user=current_user,
+        current_user=current_user
     )
-    conn.commit()
-    conn.close()
-    return redirect(url_for('show_match'))
+
+@app.route('/interested/<int:liked_id>', methods=['POST'])
+def mark_interested(liked_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    new_interest = Interested(
+        liker_id=session['user_id'],
+        liked_id=liked_id
+    )
+    db.session.add(new_interest)
+    db.session.commit()
+    
+    return redirect(url_for('show_matches'))
 
 @app.route('/dislike/<int:disliked_id>', methods=['POST'])
 def dislike_user(disliked_id):
-    conn = get_db_connection()
-    conn.execute(
-        "INSERT OR IGNORE INTO dislikes (disliker_id, disliked_id) VALUES (?, ?)",
-        (local_user['id'], disliked_id)
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    new_dislike = Dislike(
+        disliker_id=session['user_id'],
+        disliked_id=disliked_id
     )
-    conn.commit()
-    conn.close()
-    return redirect(url_for('show_match'))
+    db.session.add(new_dislike)
+    db.session.commit()
+    
+    return redirect(url_for('show_matches'))
+
 
 @app.route('/chat/<int:other_user_id>', methods=['GET', 'POST'])
 def chat(other_user_id):
-    conn = get_db_connection()
-
-    other_user = conn.execute("SELECT * FROM users WHERE id = ?", (other_user_id,)).fetchone()
-    if not other_user:
-        conn.close()
-        return "User not found", 404
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    current_user = User.query.get_or_404(session['user_id'])
+    other_user = User.query.get_or_404(other_user_id)
 
     if request.method == 'POST':
-        msg = request.form['message']
-        if msg.strip():
-            conn.execute(
-                "INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)",
-                (local_user['id'], other_user_id, msg)
+        message_content = request.form['message'].strip()
+        if message_content:
+            new_message = Message(
+                sender_id=current_user.id,
+                receiver_id=other_user.id,
+                message=message_content
             )
-            conn.commit()
+            db.session.add(new_message)
+            db.session.commit()
 
-    chat_history = conn.execute(
-        """
-        SELECT sender_id, receiver_id, message, timestamp
-        FROM messages
-        WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)
-        ORDER BY timestamp
-        """,
-        (local_user['id'], other_user_id, other_user_id, local_user['id'])
-    ).fetchall()
+    chat_history = Message.query.filter(
+        ((Message.sender_id == current_user.id) & (Message.receiver_id == other_user.id)) |
+        ((Message.sender_id == other_user.id) & (Message.receiver_id == current_user.id))
+    ).order_by(Message.timestamp.asc()).all()
 
-    conn.close()
-    return render_template('chat.html', user=local_user, other_user=other_user, chat_history=chat_history)
-
-
+    return render_template(
+        'chat.html',
+        user=current_user,
+        other_user=other_user,
+        chat_history=chat_history
+    )
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000) 
