@@ -12,56 +12,51 @@
 
 <body>
     <div class="body-color">
-    <div class="main-back">
-
-        <a href="{{ url_for('userprofile-page', user_id=user.id) }}" class="profile-link">
-            View My Profile
-        </a>
-    </div>
-
-
-
-    <div class="container-fluid mt-4">
-        <div class="row">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Welcome to ForMchat, {{ user.username }}! 😶‍🌫️</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="jumbotron">
-                            <h1 class="display-4">Find Your Perfect Match</h1>
-                            <p class="lead">Connect with like-minded individuals in your area</p>
-                            <hr class="my-4">
-                            <a class="btn start-matching-btn btn-lg" role="button" onclick="window.location.href='/matches'">Start Matching</a>
+        <div class="container-fluid mt-4">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Welcome to ForMchat, {{ user.username }}! 😶‍🌫️</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="jumbotron">
+                                <h1 class="display-4">Find Your Perfect Match</h1>
+                                <p class="lead">Connect with like-minded individuals in your area</p>
+                                <hr class="my-4">
+                                <a class="btn start-matching-btn btn-lg" role="button" onclick="window.location.href='/matches'">Start Matching</a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header bg-info text-white">
-                        <h5>Currently Active Users</h5>
+                <section class="top-active box card">
+                    <div class="card-header bg-warning text-white">
+                        <h4 class="mb-0">🏆 Top 5 Active Students – This Week</h4>
                     </div>
-                    <div class="card-body">
-                        <ul class="list-group">
-                            {% if top_logged_users %}
-                                {% for active_user in top_logged_users %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    {{ active_user.username }}
-                                    <span class="badge badge-success badge-pill">Online</span>
-                                </li>
+                    <div class="card-body p-0">
+                        <table class="leaderboard table">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Total Logins</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>          
+                                    <td>{{ user.username }}</td>       
+                                    <td>{{ user.login_count }}</td>    
+                                </tr>
                                 {% endfor %}
-                            {% else %}
-                                <li class="list-group-item">No active users currently</li>
-                            {% endif %}
-                        </ul>
+                            </tbody>
+                        </table>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
-    </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>

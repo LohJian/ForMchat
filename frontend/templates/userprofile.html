@@ -32,29 +32,33 @@
 </div>
 </div>
 <div class="inf-container">
-    <!--sex-->
+    {% if user.sex %}
     <section class="sex">
-        <h2>sex</h2>
+        <h2>Gender</h2>
         <p>{{ user.sex }}</p>
     </section>
+    {% endif %}
 
-    <!--race-->
+    {% if user.race %}
     <section class="race">
         <h2>race</h2>
         <p>{{ user.race }}</p>
     </section>
+    {% endif %}
 
-    <!--faculty-->
+    {% if user.faculty %}
     <section class="faculty">
         <h2>faculty</h2>
         <p>{{ user.faculty }}</p>
     </section>
+    {% endif %}
 
-    <!-- bio -->
+    {% if user.bio %}
     <section class="bio-section">
-        <h2>bio</h2>
+        <h2>About Me</h2>
         <p>{{ user.bio }}</p>
     </section>
+    {% endif %}
 </div>
 
 <div class= "contact-container">
