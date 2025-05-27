@@ -12,6 +12,7 @@ from datetime import datetime
 from datetime import timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
+from flask import jsonify
 
 app = Flask(__name__)
 app.secret_key = 'ForMchat1234'
@@ -44,6 +45,16 @@ class User(db.Model):
     loves = db.Column(db.Integer, default=0)
     last_login = db.Column(db.DateTime, default=datetime.utcnow)
     login_count = db.Column(db.Integer, default=0)
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    message = db.Column(db.String(255), nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref='notifications')
+
 
 with app.app_context():
     db.create_all()
@@ -193,6 +204,44 @@ def send_rejection_email(to_email):
     except Exception as e:
         print("Rejection email failed:", e)
         return False
+    
+def send_match_email(to_email, match_name):
+    sender_email = "yipyuzhe1402@gmail.com"
+    sender_password = "ickx ujbm ggmu iggr"
+
+    subject = "You Have a New Match on ForMchat!"
+    login_link = "http://localhost:5000/login"
+    body = f"""
+    <html>
+      <body>
+        <p>Hi there,</p>
+        <p>🎉 You have a new match with <strong>{match_name}</strong>!</p>
+        <p>
+          <a href="{login_link}" style="padding:10px 20px; background-color:#ff69b4; color:white; text-decoration:none; border-radius:5px;">
+            Login to check it out!
+          </a>
+        </p>
+        <p>Good luck!</p>
+        <p>Regards,<br>ForMchat Team</p>
+      </body>
+    </html>
+    """
+
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = to_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'html'))
+
+    try:
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+            print(f"Match email sent to {to_email}")
+    except Exception as e:
+        print("Match email failed:", e)
+
 
 @app.route('/admin_login', methods=['GET', 'POST'])
 def admin_login():
@@ -275,7 +324,12 @@ def forgot_password():
 
 @app.route('/')
 def home():
-    return render_template('home.html')
+    unread_count = 0
+    if 'user_id' in session:
+        user_id = session['user_id']
+        unread_count = Notification.query.filter_by(user_id=user_id, is_read=False).count()
+    return render_template('home.html', unread_count=unread_count)
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -461,6 +515,74 @@ def complete_profile():
         return redirect('/login')
 
     return render_template('complete_profile.html', email=email)
+
+@app.route('/notifications')
+def notifications():
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    user_id = session['user_id']
+    notes = Notification.query.filter_by(user_id=user_id).order_by(Notification.created_at.desc()).all()
+
+    for note in notes:
+        note.is_read = True
+    db.session.commit()
+
+    return render_template('notifications.html', notifications=notes)
+
+def view_notifications():
+    if 'user_id' not in session:
+        flash("Please login first.")
+        return redirect('/login')
+
+    user_id = session['user_id']
+    notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.created_at.desc()).all()
+    return render_template('notifications.html', notifications=notifications)
+
+@app.route('/test_send_notification/<int:user_id>')
+def test_send_notification(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return f"No user found with ID {user_id}", 404
+    
+    # 创建一条测试通知
+    test_message = f"This is a test notification for user {user.username} at {datetime.utcnow()}"
+    notification = Notification(user_id=user.id, message=test_message)
+    db.session.add(notification)
+    db.session.commit()
+    
+    # 返回该用户所有通知，显示确认
+    notifications = Notification.query.filter_by(user_id=user.id).order_by(Notification.created_at.desc()).all()
+    notifications_data = [
+        {"id": n.id, "message": n.message, "is_read": n.is_read, "created_at": n.created_at.strftime("%Y-%m-%d %H:%M:%S")}
+        for n in notifications
+    ]
+    return jsonify({
+        "message": f"Test notification sent to user {user.username}",
+        "notifications": notifications_data
+    })
+
+@app.route('/test_send_email/<int:user_id>')
+def test_send_email(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return f"No user found with ID {user_id}", 404
+
+    # 假设 match_name 是测试用的一个字符串
+    test_match_name = "Test Match"
+
+    try:
+        send_match_email(user.email, test_match_name)
+        email_status = "Email sent successfully."
+    except Exception as e:
+        email_status = f"Failed to send email: {str(e)}"
+
+    return jsonify({
+        "message": f"Test email sent to user {user.username}",
+        "email_status": email_status,
+        "email": user.email
+    })
+
 
 if __name__ == '__main__':
     app.run(debug=True)
