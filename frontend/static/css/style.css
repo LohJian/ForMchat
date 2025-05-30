@@ -300,6 +300,28 @@ button {
     transform: translateY(calc(var(--transform) * -1)) rotate(45deg);
 }
 
+/* notification button */
+.notif-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  font-size: 24px;
+  padding: 4px;
+}
+
+.notif-btn .badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: red;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 12px;
+  line-height: 1;
+}
+
 
 /* inf container css */
 .profile-container {

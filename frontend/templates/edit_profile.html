@@ -6,10 +6,8 @@
 <div class="edit-container">
     <h1>Edit profile</h1>
     
-    <form method="POST" action="{{ url_for('edit_profile', user_id=user.id) }}" enctype="multipart/form-data">
-
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('edit_profile', user_id=user.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-section">
             <label>Username</label>
             <input type="text" name="username" value="{{ user.username }}" required>
@@ -65,12 +63,33 @@
         </div>
 
         <div class="form-section">
-                <label>Avatar</label>
-                <img src="{{ url_for('static', filename=user.avatar if user.avatar else 'images/default_avatar.jpg') }}"
-                class="avatar"
+            <label>Avatar</label>
+            {% if user.avatar %}
+                <img src="{{ url_for('static', filename='uploads/user_avatars/' + user.avatar) }}"
+                    class="avatar preview-avatar"
+                    id="avatar-preview"
                     onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default_avatar.jpg') }}'">
-                <input type="file" name="avatar" accept="image/*" id="avatar_upload" style="display: block;">
-                <label for="avatar_upload" class="upload-hint">Select to choose new avatar</label>
+            {% else %}
+                <img src="{{ url_for('static', filename='images/default_avatar.jpg') }}"
+                    class="avatar preview-avatar"
+                    id="avatar-preview">
+            {% endif %}
+            
+            <input type="file" name="avatar" accept="image/*" id="avatar_upload" style="display: none;">
+            <label for="avatar_upload" class="upload-hint">Select to choose new avatar</label>
+            
+            <script>
+                document.getElementById('avatar_upload').addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            document.getElementById('avatar-preview').src = event.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            </script>
         </div>
 
         <div class="form-actions">
