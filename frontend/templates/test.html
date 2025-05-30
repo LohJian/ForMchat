@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForMchat - Modern Dating Platform</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#">ForMchat</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('profile-page', user_id=user.id) }}">Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('chat') }}">Messages</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Welcome to ForMchat, {{ user.username }}! ❤️</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="jumbotron">
+                            <h1 class="display-4">Find Your Perfect Match</h1>
+                            <p class="lead">Connect with like-minded individuals in your area</p>
+                            <hr class="my-4">
+                            <a class="btn btn-danger btn-lg" href="{{ url_for('userprofile-page', user_id=1) }}" role="button">Start Matching</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5>Currently Active Users</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            {% if top_logged_users %}
+                                {% for active_user in top_logged_users %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ active_user.username }}
+                                    <span class="badge badge-success badge-pill">Online</span>
+                                </li>
+                                {% endfor %}
+                            {% else %}
+                                <li class="list-group-item">No active users currently</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container">
+            <span class="text-muted">© 2023 ForMchat - Connecting Hearts</span>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

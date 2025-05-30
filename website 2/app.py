@@ -15,10 +15,15 @@ import atexit
 from flask import jsonify
 
 app = Flask(__name__)
+template_paths = [
+    'frontend/templates',      
+    'website 2/templates'      
+]
 app.secret_key = 'ForMchat1234'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 UPLOAD_FOLDER = os.path.join('static', 'upload')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.jinja_loader = FileSystemLoader(template_paths)
 
 db = SQLAlchemy(app)
 migrate =  Migrate(app, db)
@@ -516,6 +521,7 @@ def complete_profile():
 
     return render_template('complete_profile.html', email=email)
 
+<<<<<<< HEAD
 @app.route('/notifications')
 def notifications():
     if 'user_id' not in session:
@@ -583,6 +589,15 @@ def test_send_email(user_id):
         "email": user.email
     })
 
+=======
+@app.route('/registerhome')
+def registerhome():
+    return render_template('home.html')  
+
+@app.route('/homepage')
+def homepage():
+    return render_template('homepage.html')  
+>>>>>>> 3788dd326d60b31b298553aeb2dd39679a5a49b6
 
 if __name__ == '__main__':
     app.run(debug=True)

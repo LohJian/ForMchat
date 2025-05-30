@@ -1,14 +1,39 @@
 import sqlite3
 
-conn = sqlite3.connect('users.db')
+conn = sqlite3.connect('database.db')
 cursor = conn.cursor()
 
-cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-tables = cursor.fetchall()
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    avatar TEXT,
+    age INTEGER,
+    faculty TEXT,
+    race TEXT,
+    bio TEXT,
+    common_traits TEXT
+)
+''')
 
-if tables:
-    print("Tables in the database:", tables)
-else:
-    print("No tables found in the database.")
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS likes (
+    liker_id INTEGER,
+    liked_id INTEGER,
+    PRIMARY KEY (liker_id, liked_id)
+)
+''')
 
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sender_id INTEGER,
+    receiver_id INTEGER,
+    text TEXT
+)
+''')
+
+conn.commit()
 conn.close()
+
+print("✅ Tables created successfully in database.db.")

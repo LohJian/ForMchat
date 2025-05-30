@@ -33,9 +33,9 @@
             <label>Race</label>
             <select name="race" required>
                 <option value="">Select Race</option>
-                <option value="Malays" {% if user.race == 'Malays' %}selected{% endif %}>Malays</option>
-                <option value="Chineses" {% if user.race == 'Chineses' %}selected{% endif %}>Chineses</option>
-                <option value="Indians" {% if user.race == 'Indians' %}selected{% endif %}>Indians</option>
+                <option value="Malay" {% if user.race == 'Malay' %}selected{% endif %}>Malay</option>
+                <option value="Chinese" {% if user.race == 'Chinese' %}selected{% endif %}>Chinese</option>
+                <option value="Indian" {% if user.race == 'Indian' %}selected{% endif %}>Indian</option>
             </select>
         </div>
 
@@ -59,7 +59,6 @@
             <input type="text" name="location" value="{{ user.location }}">
         </div>
 
-        <!-- for bio -->
         <div class="form-section">
             <label>bio</label>
             <textarea name="bio" rows="4">{{ user.bio }}</textarea>

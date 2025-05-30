@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForMchat - Modern Dating Platform</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="body-color">
+        <div class="container-fluid mt-4">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Welcome to ForMchat, {{ user.username }}! 😶‍🌫️</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="jumbotron">
+                                <h1 class="display-4">Find Your Perfect Match</h1>
+                                <p class="lead">Connect with like-minded individuals in your area</p>
+                                <hr class="my-4">
+                                <a class="btn start-matching-btn btn-lg" role="button" onclick="window.location.href='/matches'">Start Matching</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="top-active box card">
+                    <div class="card-header bg-warning text-white">
+                        <h4 class="mb-0">🏆 Top 5 Active Students – This Week</h4>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="leaderboard table">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Total Logins</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>          
+                                    <td>{{ user.username }}</td>       
+                                    <td>{{ user.login_count }}</td>    
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+{% endblock %}
