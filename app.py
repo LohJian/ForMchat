@@ -55,7 +55,7 @@ db = SQLAlchemy(app)
 migrate =  Migrate(app, db)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-UPLOAD_FOLDER = 'static/avatar/upload'
+UPLOAD_FOLDER = os.path.join('static', 'upload')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
@@ -135,6 +135,8 @@ class Notification(db.Model):
     message = db.Column(db.String(255), nullable=False)
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref='notifications')   
 
 local_user = {
     "id": 99,
@@ -228,8 +230,18 @@ def allowed_file(filename):
 
 @app.route('/')
 def home():
-    user = User.query.get(1)
-    return render_template('homepage.html', user=user)
+    unread_count = 0
+    user = None
+#我加了东西在这里for那个notification的
+    if 'user_id' in session:
+        user_id = session['user_id']
+        user = User.query.get(user_id)
+        unread_count = Notification.query.filter_by(user_id=user_id, is_read=False).count()
+    else:
+        user = User.query.get(1)
+
+    return render_template('homepage.html', user=user, unread_count=unread_count)
+
 
 @app.route('/profile/<int:user_id>', endpoint='profile-page')
 def profile(user_id):
