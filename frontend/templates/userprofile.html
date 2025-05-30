@@ -4,9 +4,9 @@
 {% block content %}
 <div class="profile-container">
     <div class="profile-header">
-        <img src="{{ url_for('static', filename=user.avatar) }}" 
-             class="avatar"
-             onerror="this.src='{{ url_for('static', filename='images/default_avatar.jpg') }}'">
+        <img src="{{ url_for('static', filename='uploads/user_avatars/' + user.avatar if user.avatar else 'images/default_avatar.jpg') }}" 
+            class="avatar"
+            onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default_avatar.jpg') }}'">
         <h1>{{ user.username }}, {{ user.age }}</h1>
         <p class="location">{{ user.location }}</p>
     </div>

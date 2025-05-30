@@ -2,6 +2,7 @@ import os               #Loh part
 import sqlite3
 import secrets
 import pytz
+import time
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import timedelta, datetime
@@ -12,6 +13,7 @@ from flask import Flask, session, render_template, request, redirect, url_for, f
 from jinja2 import FileSystemLoader
 from sqlalchemy import Column, Integer, ForeignKey, MetaData, create_engine
 from sqlalchemy.orm import relationship
+from PIL import Image
 
            
 import smtplib      #Yuzhe part  
@@ -38,26 +40,26 @@ template_paths = [
     os.path.join(project_root, 'website/templates')   
 
 ]
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 app.jinja_loader = FileSystemLoader(template_paths)
 app.config['SECRET_KEY'] = 'ForMchat1234'
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
-app.config['UPLOAD_FOLDER'] = os.path.join('images', 'uploads') 
-app.config['DEFAULT_AVATAR'] = 'images/default_avatar.jpg'
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}  
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///C:/Users/user/Projects/ForMchat/instance/users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['STATIC_FOLDER'] = os.path.join(BASE_DIR, 'static')
+app.config['DEFAULT_AVATAR_PATH'] = os.path.join(app.config['STATIC_FOLDER'], 'images/default_avatar.jpg')
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'} 
+app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'uploads/user_avatars')
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 
 metadata = MetaData()
 db = SQLAlchemy(app)
 migrate =  Migrate(app, db)
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-UPLOAD_FOLDER = os.path.join('static', 'upload')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
 
 ADMIN_USERNAME = 'admin'
 ADMIN_PASSWORD = 'admin123'
@@ -82,7 +84,7 @@ class User(db.Model):
     sex = db.Column(db.String(10))
     bio = db.Column(db.Text)
     location = db.Column(db.String(100))
-    avatar = db.Column(db.String(100), default=app.config['DEFAULT_AVATAR'])
+    avatar = db.Column(db.String(200), default=app.config['DEFAULT_AVATAR_PATH'])
     likes_received = db.relationship("Like", foreign_keys="Like.target_user_id", backref="target_user")
     loves_received = db.relationship("Love", foreign_keys="Love.target_user_id", backref="target_user")
     sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='sender')
@@ -132,9 +134,9 @@ class Message(db.Model):
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    message = db.Column(db.String(255), nullable=False)
-    is_read = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    content = db.Column(db.String(255), nullable=False)
+    timestamp= db.Column(db.Boolean, default=False)
+    is_read = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship('User', backref='notifications')   
 
@@ -189,31 +191,61 @@ def migrate_database():
         
         print("Database schema updated successfully")
 
+def get_avatar_url(self):
+    if self.avatar:
+        return url_for('static', filename=f'uploads/user_avatars/{self.avatar}')
+    return url_for('static', filename='images/default_avatar.jpg')
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
 @app.route('/upload_avatar/<int:user_id>', methods=['POST'])
 def upload_avatar(user_id):
     user = User.query.get_or_404(user_id)
+
     if 'avatar' not in request.files:
         flash('No file selected', 'error')
         return redirect(request.url)
-        
+
     file = request.files['avatar']
     if file.filename == '':
         flash('No file selected', 'error')
         return redirect(request.url)
-        
+
     if file and allowed_file(file.filename):
-        filename = secure_filename(f"{user.id}_{file.filename}")
-        upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        
-        os.makedirs(os.path.dirname(upload_path), exist_ok=True)
-        file.save(upload_path)
-        
-        user.avatar = os.path.join('uploads', filename)
-        db.session.commit()
-        flash('Avatar updated successfully!', 'success')
-        
+        try:
+            avatar_folder = app.config['UPLOAD_FOLDER']
+            avatar_path = os.path.join(avatar_folder, filename)
+
+
+            timestamp = int(time.time())
+            filename = secure_filename(f"{user.id}_{timestamp}.jpg")
+            upload_path = os.path.join(avatar_folder, filename)
+
+            img = Image.open(file.stream)
+            img = img.convert('RGB')
+            img.thumbnail((500, 500))
+            img.save(upload_path, 'JPEG', quality=85)
+
+            if user.avatar and 'default' not in user.avatar:
+                old_path = os.path.join(avatar_folder, user.avatar)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+
+            user.avatar = filename
+            db.session.commit()
+
+            flash('Avatar updated successfully!', 'success')
+
+        except Exception as e:
+            app.logger.error(f"Error processing avatar: {str(e)}")
+            flash('Error processing image', 'error')
+    else:
+        flash('Invalid file type', 'error')
+
     return redirect(url_for('profile', user_id=user.id))
-        
+
 def check_interaction(action):
     session.permanent = True
     if not session.get(f'has_{action}'):
@@ -341,40 +373,51 @@ def test_save():
 @app.route('/edit-profile/<int:user_id>', methods=['GET', 'POST'])
 def edit_profile(user_id):
     user = User.query.get_or_404(user_id)
-    
+
     if request.method == 'POST':
         try:
-            if 'avatar' in request.files:
-                file = request.files['avatar']
-                if file.filename != '' and allowed_file(file.filename):
-                    filename = secure_filename(f"user_{user_id}_{file.filename}")
-                    upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                    os.makedirs(os.path.dirname('forntend/images/default-avatar.jpg'), exist_ok=True)
-                    file.save('static/uploads')
-                    user.avatar = f"uploads/{filename}"                
-
-            user.username = request.form['username']
-            user.age = int(request.form['age'])
-            user.sex = request.form['sex']
-            user.race = request.form['race']
+            user.username = request.form.get('username', user.username)
+            user.age = int(request.form.get('age', user.age))
+            user.sex = request.form.get('sex', user.sex)
+            user.race = request.form.get('race', user.race)
             user.faculty = request.form.get('faculty', user.faculty)
-            user.location = request.form['location']
-            user.bio = request.form['bio']
+            user.location = request.form.get('location', user.location)
+            user.bio = request.form.get('bio', user.bio)
 
-            db.session.commit()  
-            flash('Profile updated!', 'success')
-            return redirect(url_for('profile-page', user_id=user_id))
-            
-        except ValueError as e:
-            db.session.rollback()
-            flash(f'Invalid data: {str(e)}', 'error')
+            if 'avatar' in request.files:
+                avatar_file = request.files['avatar']
+                if avatar_file and allowed_file(avatar_file.filename):
+                    try:
+                        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+                        
+                        ext = avatar_file.filename.rsplit('.', 1)[1].lower()
+                        filename = f"user_{user_id}_{int(time.time())}.{ext}"
+                        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                        
+                        img = Image.open(avatar_file)
+                        img = img.convert('RGB')
+                        img.thumbnail((500, 500))
+                        img.save(filepath, 'JPEG', quality=85)
+                        
+                        if user.avatar and os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], user.avatar)):
+                            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], user.avatar))
+                        
+                        user.avatar = filename
+                    except Exception as img_error:
+                        app.logger.error(f"Image processing error: {str(img_error)}")
+                        flash('Error processing image', 'error')
+
+            db.session.commit()
+            flash('Profile updated successfully!', 'success')
+            return redirect(url_for('profile-page', user_id=user.id))
+
         except Exception as e:
-            db.session.rollback() 
-            flash(f'Error updating profile: {str(e)}', 'error')
-            app.logger.error(f"Error in edit_profile: {e}")
-    
-    return render_template('edit_profile.html', user=user)
-    
+            db.session.rollback()
+            app.logger.error(f"Error updating profile: {str(e)}")
+            flash("An error occurred while updating the profile.", "error")
+
+    return render_template("edit_profile.html", user=user)
+
 @app.route('/registerhome')
 def registerhome():
     return render_template('home.html')  
@@ -759,13 +802,18 @@ def verify_email():
 def mainpage():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     user = User.query.get(session['user_id'])
     if not user:
         flash('User not found')
         return redirect(url_for('login'))
-    
-    return render_template('mainpage.html', user=user)
+
+    one_week_ago = datetime.utcnow() - timedelta(days=7)
+    top_users = User.query.filter(User.last_login >= one_week_ago)\
+                          .order_by(User.login_count.desc())\
+                          .limit(5).all()
+
+    return render_template('mainpage.html', user=user, users=top_users)
 
 @app.route('/reset_password', methods=['GET', 'POST'])
 def reset_password():
@@ -800,43 +848,38 @@ def complete_profile():
         flash('User not found.')
         return redirect('/login')
 
-    if user.verification_status != "Verified":
-        flash('Your email must be verified to complete your profile.')
-        return redirect('/register')
-
     if request.method == 'POST':
-        sex = request.form.get('sex')
-        race = request.form.get('race')
-        faculty = request.form.get('faculty')
-        age = request.form.get('age')
-        location = request.form.get('location')
+        try:
+            if 'avatar' in request.files:
+                file = request.files['avatar']
+                if file.filename != '' and allowed_file(file.filename):
+                    filename = secure_filename(f"{user.id}_{int(time.time())}.jpg")
+                    upload_path = os.path.join(app.config['AVATAR_UPLOAD_FOLDER'], filename)
+                    
+                    img = Image.open(file.stream)
+                    img = img.convert('RGB')
+                    img.thumbnail((500, 500))
+                    img.save(upload_path, 'JPEG', quality=85)
+                    
+                    user.avatar = f"uploads/user_avatars/{filename}"
 
-        user.sex = sex
-        user.race = race
-        user.faculty = faculty
-        user.age = age
-        user.location = location
+            user.sex = request.form.get('sex')
+            user.race = request.form.get('race')
+            user.faculty = request.form.get('faculty')
+            user.age = request.form.get('age')
+            user.location = request.form.get('location')
 
-        avatar_file = request.files.get('avatar')
-        if avatar_file and avatar_file.filename != '':
-            filename = secure_filename(avatar_file.filename)
-            unique_filename = f"{uuid.uuid4().hex}_{filename}"
-            upload_folder = app.config['UPLOAD_FOLDER']
-            os.makedirs(upload_folder, exist_ok=True)
-            file_path = os.path.join(upload_folder, unique_filename)
-            print("saving avatar", file_path)
-            avatar_file.save(file_path)
-            user.avatar = unique_filename
-        
-        else:
-            print("avatar upload failed")
-    
-        if user.is_verified and all([user.age, user.race, user.faculty, user.sex, user.avatar != 'default.jpg']):
-            user.verification_status = "Pending Approval"
+            if all([user.age, user.race, user.faculty, user.sex, user.avatar]):
+                user.verification_status = "Pending Approval"
 
-        db.session.commit()
-        flash('Profile updated successfully. Awaiting admin approval.')
-        return redirect('/login')
+            db.session.commit()
+            flash('Profile updated successfully. Awaiting admin approval.')
+            return redirect('/login')
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating profile: {str(e)}', 'error')
+            app.logger.error(f"Error in complete_profile: {e}")
 
     return render_template('complete_profile.html', email=email)
 
