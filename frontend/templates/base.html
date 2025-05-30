@@ -16,17 +16,24 @@
                     <div class="front">
                         <span>ForMchat</span>
                     </div>
-            </button>
-            
-            <div class="dropdown">
-                <span>Menu</span>
-                <div class="dropdown-content">
-                    <a href="{{ url_for('chat', other_user_id=user.id) }}"> ChatRoom </a>
-                    <a href="#"> Notification </a>
-                    <a href="{{ url_for('profile-page', user_id=user.id) }}">Profile</a>
-                    <a href="{{ url_for('registerhome', user_id=user.id) }}"> Sign Out </a>
-                </div>      
-            </div>
+            </button>   
+
+           <div class="right-items">
+                <button class="notif-btn">
+                    <a href="{{ url_for('notifications', other_user_id=user.id) }}">🔔</a>
+
+                    <span class="badge">3</span>
+                </button>
+
+                <div class="dropdown">
+                    <span>Menu</span>
+                    <div class="dropdown-content">
+                        <a href="{{ url_for('chat', other_user_id=user.id) }}"> ChatRoom </a>
+                        <a href="{{ url_for('profile-page', user_id=user.id) }}">Profile</a>
+                        <a href="{{ url_for('registerhome', user_id=user.id) }}"> Sign Out </a>
+                    </div>      
+                </div>
+            </div>    
         </nav>
 
         <main>

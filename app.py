@@ -174,16 +174,13 @@ def test_db():
 
 def migrate_database():
     with app.app_context():
-        # Create a database engine directly
         from sqlalchemy import create_engine, inspect
         engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
         
-        # Check if columns exist
         inspector = inspect(engine)
         columns = inspector.get_columns('user')
         column_names = [col['name'] for col in columns]
         
-        # Add missing columns
         with engine.connect() as connection:
             if 'sex' not in column_names:
                 connection.execute('ALTER TABLE user ADD COLUMN sex VARCHAR(50)')
@@ -700,7 +697,7 @@ def login():
                 user.login_count += 1
                 db.session.commit()
                 flash('Login successful!')
-                return redirect('/dashboard')
+                return redirect('/mainpage')
             elif user.verification_status == "Rejected":
                 flash('Your profile was rejected. Please update your profile.')
                 return redirect(f'/complete_profile?email={email}')
