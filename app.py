@@ -20,6 +20,10 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, render_template, request, redirect, flash ,session
 from werkzeug.security import generate_password_hash,check_password_hash
+from datetime import datetime
+from datetime import timedelta
+from apscheduler.schedulers.background import BackgroundScheduler
+import atexit
 
 from sqlalchemy import or_, and_, not_      #Ash part
 from sqlalchemy.sql.expression import func
@@ -83,7 +87,8 @@ class User(db.Model):
     loves_received = db.relationship("Love", foreign_keys="Love.target_user_id", backref="target_user")
     sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='sender')
     received_messages = db.relationship('Message', foreign_keys='Message.receiver_id', backref='receiver')
-
+    last_login = db.Column(db.DateTime, default=datetime.utcnow)
+    login_count = db.Column(db.Integer, default=0)
 
 class Like(db.Model):
     __tablename__ = 'likes'
@@ -123,6 +128,13 @@ class Message(db.Model):
     receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     message = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, default=datetime.now)
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    message = db.Column(db.String(255), nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 local_user = {
     "id": 99,
@@ -510,6 +522,43 @@ def send_rejection_email(to_email):
         print("Rejection email failed:", e)
         return False
 
+def send_match_email(to_email, match_name):
+    sender_email = "yipyuzhe1402@gmail.com"
+    sender_password = "ickx ujbm ggmu iggr"
+
+    subject = "You Have a New Match on ForMchat!"
+    login_link = "http://localhost:5000/login"
+    body = f"""
+    <html>
+      <body>
+        <p>Hi there,</p>
+        <p>🎉 You have a new match with <strong>{match_name}</strong>!</p>
+        <p>
+          <a href="{login_link}" style="padding:10px 20px; background-color:#ff69b4; color:white; text-decoration:none; border-radius:5px;">
+            Login to check it out!
+          </a>
+        </p>
+        <p>Good luck!</p>
+        <p>Regards,<br>ForMchat Team</p>
+      </body>
+    </html>
+    """
+
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = to_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'html'))
+
+    try:
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+            print(f"Match email sent to {to_email}")
+    except Exception as e:
+        print("Match email failed:", e)
+
 @app.route('/admin_login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -635,8 +684,11 @@ def login():
         if user and check_password_hash(user.password, password):
             if user.verification_status == "Approved":
                 session['user_id'] = user.id
+                user.last_login = datetime.utcnow()
+                user.login_count += 1
+                db.session.commit()
                 flash('Login successful!')
-                return redirect('/mainpage')
+                return redirect('/dashboard')
             elif user.verification_status == "Rejected":
                 flash('Your profile was rejected. Please update your profile.')
                 return redirect(f'/complete_profile?email={email}')
@@ -649,8 +701,30 @@ def login():
         else:
             flash('Invalid email or password')
             return redirect('/login')
-    
+        
+        
     return render_template('login.html')
+
+@app.route('/top-active')
+def top_active_users():
+    one_week_ago = datetime.utcnow() - timedelta(days=7)
+    
+    top_users = User.query.filter(User.last_login >= one_week_ago)\
+                          .order_by(User.login_count.desc())\
+                          .limit(5).all()
+    
+    return render_template('top_active.html', users=top_users)
+
+def reset_weekly_logins():
+    with app.app_context():
+        User.query.update({User.login_count: 0})
+        db.session.commit()
+        print("Weekly Leaderboard reset.")
+    
+scheduler = BackgroundScheduler()
+scheduler.add_job(reset_weekly_logins, trigger='cron', day_of_week='mon', hour=0, minute=0)
+scheduler.start()
+atexit.register(lambda: scheduler.shutdown())
 
 @app.route('/verify')
 def verify_email():
@@ -738,7 +812,7 @@ def complete_profile():
         if avatar_file and avatar_file.filename != '':
             filename = secure_filename(avatar_file.filename)
             unique_filename = f"{uuid.uuid4().hex}_{filename}"
-            upload_folder = os.path.join('static', 'avatar', 'upload')
+            upload_folder = app.config['UPLOAD_FOLDER']
             os.makedirs(upload_folder, exist_ok=True)
             file_path = os.path.join(upload_folder, unique_filename)
             print("saving avatar", file_path)
@@ -757,7 +831,28 @@ def complete_profile():
 
     return render_template('complete_profile.html', email=email)
 
+@app.route('/notifications')
+def notifications():
+    if 'user_id' not in session:
+        return redirect('/login')
 
+    user_id = session['user_id']
+    notes = Notification.query.filter_by(user_id=user_id).order_by(Notification.created_at.desc()).all()
+
+    for note in notes:
+        note.is_read = True
+    db.session.commit()
+
+    return render_template('notifications.html', notifications=notes)
+
+def view_notifications():
+    if 'user_id' not in session:
+        flash("Please login first.")
+        return redirect('/login')
+
+    user_id = session['user_id']
+    notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.created_at.desc()).all()
+    return render_template('notifications.html', notifications=notifications)
 
 # Ashton part
 @app.route('/show')
@@ -818,6 +913,28 @@ def mark_interested(liked_id):
     db.session.add(new_interest)
     db.session.commit()
     
+    mutual_match = Interested.query.filter_by(
+        liker_id=liked_id,
+        liked_id=session['user_id']
+    ).first()
+   
+    if mutual_match:
+        user1 = User.query.get(session['user_id'])
+        user2 = User.query.get(liked_id)
+
+        # 通知两人
+        notif1 = Notification(user_id=session['user_id'], message=f"You matched with {user2.username}!")
+        notif2 = Notification(user_id=liked_id, message=f"You matched with {user1.username}!")
+        db.session.add_all([notif1, notif2])
+        db.session.commit()
+
+        # 发 email（假设你写的是 send_match_email(email, match_name)）
+        try:
+            send_match_email(user1.email, user2.username)
+            send_match_email(user2.email, user1.username)
+        except Exception as e:
+            print(f"Email error: {e}")
+
     return redirect(url_for('show_matches'))
 
 @app.route('/dislike/<int:disliked_id>', methods=['POST'])
