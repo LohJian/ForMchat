@@ -135,8 +135,8 @@ class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     content = db.Column(db.String(255), nullable=False)
-    timestamp= db.Column(db.Boolean, default=False)
-    is_read = db.Column(db.DateTime, default=datetime.utcnow)
+    is_read = db.Column(db.Boolean, default=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship('User', backref='notifications')   
 
@@ -256,21 +256,23 @@ def check_interaction(action):
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
-
+#我改了这里的东西你看下
 @app.route('/')
 def home():
-    unread_count = 0
+    if 'user_id' not in session:
+        flash('Please log in first.', 'warning')
+        return redirect(url_for('login'))
+    return render_template('mainpage.html')
+#这个是新加的for那个notification你看下
+@app.context_processor
+def inject_user_and_notifications():
     user = None
-#我加了东西在这里for那个notification的
+    unread_count = 0
     if 'user_id' in session:
         user_id = session['user_id']
         user = User.query.get(user_id)
         unread_count = Notification.query.filter_by(user_id=user_id, is_read=False).count()
-    else:
-        user = User.query.get(1)
-
-    return render_template('homepage.html', user=user, unread_count=unread_count)
-
+    return dict(user=user, unread_count=unread_count)
 
 @app.route('/profile/<int:user_id>', endpoint='profile-page')
 def profile(user_id):
@@ -807,7 +809,7 @@ def mainpage():
     if not user:
         flash('User not found')
         return redirect(url_for('login'))
-
+#zj你看下这里是不是多写了我上面有top active了
     one_week_ago = datetime.utcnow() - timedelta(days=7)
     top_users = User.query.filter(User.last_login >= one_week_ago)\
                           .order_by(User.login_count.desc())\
@@ -874,7 +876,7 @@ def complete_profile():
 
             db.session.commit()
             flash('Profile updated successfully. Awaiting admin approval.')
-            return redirect('/login')
+            return render_template('complete_profile.html', email=email)
 
         except Exception as e:
             db.session.rollback()
@@ -886,13 +888,15 @@ def complete_profile():
 @app.route('/notifications')
 def notifications():
     if 'user_id' not in session:
+        flash("Please login first.")
         return redirect('/login')
 
     user_id = session['user_id']
-    notes = Notification.query.filter_by(user_id=user_id).order_by(Notification.created_at.desc()).all()
+    notes = Notification.query.filter_by(user_id=user_id).order_by(Notification.timestamp.desc()).all()
 
     for note in notes:
-        note.is_read = True
+        if not note.is_read:
+            note.is_read = True
     db.session.commit()
 
     return render_template('notifications.html', notifications=notes)
@@ -903,7 +907,7 @@ def view_notifications():
         return redirect('/login')
 
     user_id = session['user_id']
-    notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.created_at.desc()).all()
+    notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.timestamp.desc()).all()
     return render_template('notifications.html', notifications=notifications)
 
 # Ashton part
@@ -975,8 +979,8 @@ def mark_interested(liked_id):
         user2 = User.query.get(liked_id)
 
         # 通知两人
-        notif1 = Notification(user_id=session['user_id'], message=f"You matched with {user2.username}!")
-        notif2 = Notification(user_id=liked_id, message=f"You matched with {user1.username}!")
+        notif1 = Notification(user_id=session['user_id'], content=f"You matched with {user2.username}!")
+        notif2 = Notification(user_id=liked_id, content=f"You matched with {user1.username}!")
         db.session.add_all([notif1, notif2])
         db.session.commit()
 

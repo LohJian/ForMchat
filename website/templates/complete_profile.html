@@ -58,10 +58,28 @@
         button:hover {
             background-color: #ff758c;
         }
+
+        .flash-messages {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages">
+              {% for message in messages %}
+                <p>{{ message }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
         <h2>Complete Your Profile</h2>
         <form method="POST" enctype="multipart/form-data">
             <label for="sex">Sex:</label>
