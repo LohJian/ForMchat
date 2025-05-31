@@ -13,7 +13,7 @@ from datetime import timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
 from flask import jsonify
-
+ #small update to trigger github contribution
 app = Flask(__name__)
 template_paths = [
     'frontend/templates',      
