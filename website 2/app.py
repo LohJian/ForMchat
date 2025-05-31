@@ -521,7 +521,6 @@ def complete_profile():
 
     return render_template('complete_profile.html', email=email)
 
-<<<<<<< HEAD
 @app.route('/notifications')
 def notifications():
     if 'user_id' not in session:
@@ -589,15 +588,6 @@ def test_send_email(user_id):
         "email": user.email
     })
 
-=======
-@app.route('/registerhome')
-def registerhome():
-    return render_template('home.html')  
-
-@app.route('/homepage')
-def homepage():
-    return render_template('homepage.html')  
->>>>>>> 3788dd326d60b31b298553aeb2dd39679a5a49b6
 
 if __name__ == '__main__':
     app.run(debug=True)
