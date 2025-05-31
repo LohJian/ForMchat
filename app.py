@@ -77,7 +77,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
-    verification_status = db.Column(db.String(100), default="Pending")
+    verification_status = db.Column(db.String(100), default="Pending Approval")
     age = db.Column(db.Integer)
     race = db.Column(db.String(50))
     faculty = db.Column(db.String(50))
@@ -633,7 +633,7 @@ def admin_dashboard():
         User.faculty.isnot(None),
         User.age.isnot(None),
         User.sex.isnot(None),
-        User.avatar != 'default.jpg'
+        ~User.avatar.endswith('default_avatar.jpg')  
     ).all()
 
     verified_users = User.query.filter(User.verification_status == "Approved").all()

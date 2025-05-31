@@ -53,9 +53,9 @@
                     <td>{{ user.sex }}</td>
                     <td>{{ user.age }}</td>
                     <td class="avatar-cell">
-                         <img src="{{ url_for('static', filename=user.avatar) }}" 
-                            class="avatar"
-                            onerror="this.src='{{ url_for('static', filename='images/default_avatar.jpg') }}'">
+                         <img src="{{ user.avatar if user.avatar.startswith('http') else url_for('static', filename='upload/' + user.avatar.split('/')[-1]) }}"
+                            alt="Avatar"
+                            class="avatar-img">
                     </td>
                     <td>
                         <form action="/approve/{{ user.id }}" method="POST" style="display:inline-block;">
