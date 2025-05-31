@@ -871,7 +871,7 @@ def complete_profile():
             user.age = request.form.get('age')
             user.location = request.form.get('location')
 
-            if all([user.age, user.race, user.faculty, user.sex, user.avatar]):
+            if all([user.age, user.race, user.faculty, user.sex, user.avatar!= 'default.jpg']):
                 user.verification_status = "Pending Approval"
 
             db.session.commit()
