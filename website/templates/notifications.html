@@ -58,8 +58,8 @@
         {% if notifications %}
             {% for note in notifications %}
                 <div class="notification {% if not note.is_read %}unread{% endif %}">
-                    <p>{{ note.message }}</p>
-                    <time>{{ note.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</time>
+                    <p>{{ note.content }}</p>
+                    <time>{{ note.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</time>
                 </div>
             {% endfor %}
         {% else %}
