@@ -77,7 +77,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
-    verification_status = db.Column(db.String(100), default="Pending")
+    verification_status = db.Column(db.String(100), default="Pending Approval")
     age = db.Column(db.Integer)
     race = db.Column(db.String(50))
     faculty = db.Column(db.String(50))
@@ -98,7 +98,7 @@ class Like(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False  )
     target_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     session_id = db.Column(db.String(50), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True),server_default=func.now(),nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
 
 class Love(db.Model):
@@ -107,7 +107,7 @@ class Love(db.Model):
     user_id = db.Column( db.Integer,  db.ForeignKey('user.id'),  nullable=False  )
     target_user_id = db.Column(db.Integer,  db.ForeignKey('user.id'), nullable=False)
     session_id = db.Column(db.String(50), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
 class Dislike(db.Model):
     __tablename__ = 'dislikes'
@@ -138,7 +138,8 @@ class Notification(db.Model):
     is_read = db.Column(db.Boolean, default=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-    user = db.relationship('User', backref='notifications')   
+    user = db.relationship('User', backref='notifications')
+
 
 local_user = {
     "id": 99,
@@ -216,11 +217,12 @@ def upload_avatar(user_id):
     if file and allowed_file(file.filename):
         try:
             avatar_folder = app.config['UPLOAD_FOLDER']
-            avatar_path = os.path.join(avatar_folder, filename)
+            
 
 
             timestamp = int(time.time())
             filename = secure_filename(f"{user.id}_{timestamp}.jpg")
+
             upload_path = os.path.join(avatar_folder, filename)
 
             img = Image.open(file.stream)
@@ -259,10 +261,8 @@ def allowed_file(filename):
 #我改了这里的东西你看下
 @app.route('/')
 def home():
-    if 'user_id' not in session:
-        flash('Please log in first.', 'warning')
-        return redirect(url_for('login'))
-    return render_template('mainpage.html')
+    
+    return render_template('homepage.html')
 #这个是新加的for那个notification你看下
 @app.context_processor
 def inject_user_and_notifications():
@@ -388,22 +388,24 @@ def edit_profile(user_id):
 
             if 'avatar' in request.files:
                 avatar_file = request.files['avatar']
-                if avatar_file and allowed_file(avatar_file.filename):
+        
+                if avatar_file.filename != '' and allowed_file(avatar_file.filename):
                     try:
                         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-                        
+
                         ext = avatar_file.filename.rsplit('.', 1)[1].lower()
                         filename = f"user_{user_id}_{int(time.time())}.{ext}"
                         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                        
+
                         img = Image.open(avatar_file)
                         img = img.convert('RGB')
                         img.thumbnail((500, 500))
                         img.save(filepath, 'JPEG', quality=85)
-                        
+
+                        # Delete old avatar if not default
                         if user.avatar and os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], user.avatar)):
                             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], user.avatar))
-                        
+
                         user.avatar = filename
                     except Exception as img_error:
                         app.logger.error(f"Image processing error: {str(img_error)}")
@@ -635,7 +637,7 @@ def admin_dashboard():
         User.faculty.isnot(None),
         User.age.isnot(None),
         User.sex.isnot(None),
-        User.avatar != 'default.jpg'
+        ~User.avatar.endswith('default_avatar.jpg')  
     ).all()
 
     verified_users = User.query.filter(User.verification_status == "Approved").all()
@@ -856,7 +858,7 @@ def complete_profile():
                 file = request.files['avatar']
                 if file.filename != '' and allowed_file(file.filename):
                     filename = secure_filename(f"{user.id}_{int(time.time())}.jpg")
-                    upload_path = os.path.join(app.config['AVATAR_UPLOAD_FOLDER'], filename)
+                    upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                     
                     img = Image.open(file.stream)
                     img = img.convert('RGB')
