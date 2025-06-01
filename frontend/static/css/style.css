@@ -55,6 +55,22 @@ main {
 .fot-color{
     background: linear-gradient(135deg, #ffffff 0%,#fff0f3 100% );
 }
+
+a button {
+            margin-top: 20px;
+            background-color: #f69baa;
+            color: #333;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        a button:hover {
+            background-color: #ccc;
+        }
+        
 /* From Uiverse.io */ 
 button {
     position: relative;

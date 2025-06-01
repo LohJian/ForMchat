@@ -2,7 +2,13 @@
 {% block title %}{{ user.username }}的资料页{% endblock %}
 
 {% block content %}
+
 <div class="profile-container">
+    <a href="{{ url_for('chat', other_user_id=user.id) }}" style="text-decoration: none;">
+        <button style="padding: 10px 20px;">⬅ Return to chatpage</button>
+    </a>
+
+
     <div class="profile-header">
         <img src="{{ url_for('static', filename='uploads/user_avatars/' + user.avatar if user.avatar else 'images/default_avatar.jpg') }}" 
             class="avatar"

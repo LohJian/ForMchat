@@ -5,6 +5,9 @@
 {% block content %}
 <div class="body-color">
     <div class="chat-container">
+        <a href="{{ url_for('show_matches', user_id=other_user.id) }}" style="text-decoration: none;">
+      <button style="padding: 10px 20px;">⬅ Return to Matches</button>
+      </a>
         <div class="chat-header">
             <h2>💬 Chat with {{ other_user.username }}</h2>
             <a class="profile-btn" href="{{ url_for('userprofile-page', user_id=other_user.id) }}">
