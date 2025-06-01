@@ -53,7 +53,7 @@
                     <td>{{ user.sex }}</td>
                     <td>{{ user.age }}</td>
                     <td class="avatar-cell">
-                         <img src="{{ user.avatar if user.avatar.startswith('http') else url_for('static', filename='upload/' + user.avatar.split('/')[-1]) }}"
+                        <img src="{{ user.avatar if user.avatar.startswith('http') else url_for('static', filename='upload/' + user.avatar.split('/')[-1]) }}"
                             alt="Avatar"
                             class="avatar-img">
                     </td>

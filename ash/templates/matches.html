@@ -114,7 +114,7 @@
 
     .match-header {
         position: relative;
-        height: 200px;
+        height: 100px;
         background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
     }
 
@@ -243,9 +243,9 @@
             {% if interested_users %}
                 {% for user in interested_users %}
                 <li class="match-item">
-                    <img src="{{ user.avatar or url_for('static', filename='images/default_avatar.jpg') }}" 
-                         class="match-avatar" 
-                         alt="{{ user.username }}">
+                    <img src="{{ url_for('static', filename='uploads/' + match.avatar) if match.avatar else url_for('static', filename='images/default_avatar.jpg') }}" 
+                            class="match-avatar-large" 
+                            alt="{{ match.username }}">
                     <div class="match-info">
                         <div class="match-name">{{ user.username }}</div>
                         <div class="match-age">{{ user.age }} years</div>
@@ -265,9 +265,9 @@
         {% if match %}
         <div class="match-card">
             <div class="match-header">
-                <img src="{{ match.avatar or url_for('static', filename='images/default_avatar.jpg') }}" 
-                     class="match-avatar-large" 
-                     alt="{{ match.username }}">
+                 <img src="{{ url_for('static', filename='uploads/user_avatars/' + user.avatar) }}"
+                        class="avatar"
+                        alt="{{ match.username }}">
             </div>
             
             <div class="match-body">
@@ -287,7 +287,7 @@
                         👍 Like
                     </button>
                     <button type="submit" 
-                            formaction="{{ url_for('mark_dislike', disliked_id=match.id) }}" 
+                            formaction="{{ url_for('dislike_user', disliked_id=match.id) }}" 
                             class="action-btn dislike-btn">
                         👎 Pass
                     </button>
