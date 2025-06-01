@@ -686,9 +686,9 @@ def forgot_password():
 
         if user:
             send_reset_password_email(user.email)
-            flash('Password reset link sent to your email.')
+            flash('Password reset link sent to your email.', 'success')
         else:
-            flash('Email not found.')
+            flash('Email not found.', 'error')
 
         return redirect('/forgot-password')
 
@@ -833,12 +833,12 @@ def reset_password():
         confirm_password = request.form['confirm_password']
 
         if new_password != confirm_password:
-            flash('Passwords do not match.')
+            flash('Passwords do not match.', 'error' )
             return redirect(request.url)
 
         user.password = generate_password_hash(new_password)
         db.session.commit()
-        flash('Password reset successfully. You can now log in.')
+        flash('Password reset successfully. You can now log in.', 'success')
         return redirect('/login')
     
     return render_template('reset_password.html', email=email)

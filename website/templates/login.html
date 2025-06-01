@@ -54,6 +54,23 @@
             background-color: #ff758c;
         }
 
+        .flash-messages {
+            list-style-type: none;
+            padding: 0;
+            margin-bottom: 15px;
+            width: 300px;
+        }
+
+        .flash-messages li {
+            background-color: #ffe0e6;
+            border: 1px solid #ff99ac;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            color: #b3002d;
+            text-align: center;
+        }
+
         p {
             margin-top: 15px;
             text-align: center;
@@ -71,6 +88,17 @@
 </head>
 <body>
     <h2>Login</h2>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flash-messages">
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
     <form method="POST">
         <input type="email" name="email" placeholder="Email" required><br><br>
 
