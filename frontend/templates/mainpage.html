@@ -13,6 +13,19 @@
 <body>
     <div class="body-color">
         <div class="container-fluid mt-4">
+
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <div class="alert alert-success" role="alert">
+                  {% for message in messages %}
+                    <p>{{ message }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+            
+    <div class="body-color">
+        <div class="container-fluid mt-4">
             <div class="row">
                 <div class="col-md-8">
                     <div class="card">
