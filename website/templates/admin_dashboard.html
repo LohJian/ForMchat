@@ -53,9 +53,15 @@
                     <td>{{ user.sex }}</td>
                     <td>{{ user.age }}</td>
                     <td class="avatar-cell">
-                        <img src="{{ user.avatar if user.avatar.startswith('http') else url_for('static', filename='upload/' + user.avatar.split('/')[-1]) }}"
-                            alt="Avatar"
+                        {% if user.avatar and 'default_avatar.jpg' not in user.avatar %}
+                        <img src="{{ url_for('static', filename='uploads/user_avatars/' ~ user.avatar) }}"
+                            alt="{{ user.username }}"
                             class="avatar-img">
+                        {% else %}
+                        <img src="{{ url_for('static', filename='images/default_avatar.jpg') }}"
+                            alt="Default avatar"
+                            class="avatar-img">
+                        {% endif %}
                     </td>
                     <td>
                         <form action="/approve/{{ user.id }}" method="POST" style="display:inline-block;">

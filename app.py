@@ -9,12 +9,11 @@ from datetime import timedelta, datetime
 from sqlalchemy.sql import func
 from pathlib import Path
 from werkzeug.utils import secure_filename
-from flask import Flask, session, render_template, request, redirect, url_for, flash
+from flask import Flask, session, render_template, request, redirect, url_for, flash, abort, send_from_directory
 from jinja2 import FileSystemLoader
 from sqlalchemy import Column, Integer, ForeignKey, MetaData, create_engine
 from sqlalchemy.orm import relationship
 from PIL import Image
-
            
 import smtplib      #Yuzhe part  
 import uuid
@@ -30,7 +29,14 @@ import atexit
 from sqlalchemy import or_, and_, not_      #Ash part
 from sqlalchemy.sql.expression import func
 
-app = Flask(__name__, static_folder='frontend/static')  
+app = Flask(__name__, static_folder='frontend/static')
+
+@app.route('/media/<path:filename>')
+def media_files(filename):
+    # “static” folder here is <project>/static
+    return send_from_directory(os.path.join(BASE_DIR, 'static'), filename)
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
 project_root = os.path.abspath(os.path.dirname(__file__))
 template_paths = [
     os.path.join(project_root, 'templates'),         
@@ -41,8 +47,6 @@ template_paths = [
 
 ]
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 app.jinja_loader = FileSystemLoader(template_paths)
 app.config['SECRET_KEY'] = 'ForMchat1234'
 app.config['SESSION_PERMANENT'] = True
@@ -51,11 +55,10 @@ app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///C:/Users/user/Projects/ForMchat/instance/users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['STATIC_FOLDER'] = os.path.join(BASE_DIR, 'static')
-app.config['DEFAULT_AVATAR_PATH'] = os.path.join(app.config['STATIC_FOLDER'], 'images/default_avatar.jpg')
+app.config['DEFAULT_AVATAR_PATH'] = os.path.join(app.static_folder, 'images/default_avatar.jpg')
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'} 
-app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'uploads/user_avatars')
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads', 'user_avatars')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
 
 metadata = MetaData()
 db = SQLAlchemy(app)
@@ -203,6 +206,9 @@ def allowed_file(filename):
 
 @app.route('/upload_avatar/<int:user_id>', methods=['POST'])
 def upload_avatar(user_id):
+    if user_id != session.get('user_id'):
+        abort(403)
+
     user = User.query.get_or_404(user_id)
 
     if 'avatar' not in request.files:
@@ -331,9 +337,12 @@ def like(user_id):
         flash("You've already liked this profile!", 'info')
         return redirect(url_for('userprofile-page', user_id=user_id))
 
+    liker_id = session.get('user_id')  
+    target_id = user_id
+
     new_like = Like(
-        user_id=user_id,
-        target_user_id=request.form['receiver_id'],
+        user_id=liker_id,
+        target_user_id=target_id,
         session_id=session['session_id'],
         created_at=datetime.now(pytz.timezone('Asia/Kuala_Lumpur'))
     )
@@ -355,9 +364,12 @@ def love(user_id):
         flash("You've already loved this profile!", 'info')
         return redirect(url_for('userprofile-page', user_id=user_id))
 
+    lover_id = session.get('user_id')  
+    target_id = user_id
+
     new_love = Love(
-        user_id=user_id,
-        target_user_id=request.form['receiver_id'],
+        user_id=lover_id,
+        target_user_id=target_id,
         session_id=session['session_id'],
         created_at=datetime.now(pytz.timezone('Asia/Kuala_Lumpur'))
     )
@@ -374,6 +386,9 @@ def test_save():
 
 @app.route('/edit-profile/<int:user_id>', methods=['GET', 'POST'])
 def edit_profile(user_id):
+    if user_id != session.get('user_id'):
+        abort(403)
+
     user = User.query.get_or_404(user_id)
 
     if request.method == 'POST':
@@ -865,7 +880,8 @@ def complete_profile():
                     img.thumbnail((500, 500))
                     img.save(upload_path, 'JPEG', quality=85)
                     
-                    user.avatar = f"uploads/user_avatars/{filename}"
+                    user.avatar = filename  
+
 
             user.sex = request.form.get('sex')
             user.race = request.form.get('race')
@@ -1036,10 +1052,17 @@ def chat(other_user_id):
 
     return render_template(
         'chat.html',
-        user=current_user,
         other_user=other_user,
         chat_history=chat_history
     )
+
+@app.context_processor   #pass current_user to render_template() again and always available in base.html
+def inject_current_user():
+    user_id = session.get('user_id')
+    if user_id:
+        current_user = User.query.get(user_id)
+        return dict(current_user=current_user)
+    return dict(current_user=None)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000) 

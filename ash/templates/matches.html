@@ -243,9 +243,6 @@
             {% if interested_users %}
                 {% for user in interested_users %}
                 <li class="match-item">
-                    <img src="{{ url_for('static', filename='uploads/' + match.avatar) if match.avatar else url_for('static', filename='images/default_avatar.jpg') }}" 
-                            class="match-avatar-large" 
-                            alt="{{ match.username }}">
                     <div class="match-info">
                         <div class="match-name">{{ user.username }}</div>
                         <div class="match-age">{{ user.age }} years</div>
@@ -265,9 +262,10 @@
         {% if match %}
         <div class="match-card">
             <div class="match-header">
-                 <img src="{{ url_for('static', filename='uploads/user_avatars/' + user.avatar) }}"
-                        class="avatar"
+                 <img src="{{ url_for('static', filename='uploads/user_avatars/' + match.avatar) if match.avatar else url_for('static', filename='images/default_avatar.jpg') }}"
+                        class="match-avatar-large"
                         alt="{{ match.username }}">
+
             </div>
             
             <div class="match-body">
