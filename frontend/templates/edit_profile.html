@@ -64,18 +64,18 @@
 
         <div class="form-section">
             <label>Avatar</label>
-            {% if user.avatar and 'default_avatar.jpg' not in user.avatar %}
-                <img src="{{ url_for('static', filename='uploads/user_avatars/' + user.avatar) }}"
+                {% if user.avatar and 'default_avatar.jpg' not in user.avatar %}
+                <img
+                    src="{{ url_for('media_files', filename='uploads/user_avatars/' ~ user.avatar) }}"
                     class="avatar preview-avatar"
                     id="avatar-preview"
-                    onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default_avatar.jpg') }}'">
-            {% else %}
-                <img src="{{ url_for('static', filename='images/default_avatar.jpg') }}"
+                    onerror="this.onerror=null; this.src='{{ url_for('media_files', filename='images/default_avatar.jpg') }}'">
+                {% else %}
+                <img
+                    src="{{ url_for('media_files', filename='images/default_avatar.jpg') }}"
                     class="avatar preview-avatar"
                     id="avatar-preview">
-            {% endif %}
-
-            
+                {% endif %}
             <input type="file" name="avatar" accept="image/*" id="avatar_upload" style="display: none;">
             <label for="avatar_upload" class="upload-hint">Select to choose new avatar</label>
             

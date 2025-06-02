@@ -9,13 +9,11 @@ from datetime import timedelta, datetime
 from sqlalchemy.sql import func
 from pathlib import Path
 from werkzeug.utils import secure_filename
-from flask import Flask, session, render_template, request, redirect, url_for, flash
+from flask import Flask, session, render_template, request, redirect, url_for, flash, abort, send_from_directory
 from jinja2 import FileSystemLoader
 from sqlalchemy import Column, Integer, ForeignKey, MetaData, create_engine
 from sqlalchemy.orm import relationship
 from PIL import Image
-from flask import abort
-
            
 import smtplib      #Yuzhe part  
 import uuid
@@ -31,7 +29,14 @@ import atexit
 from sqlalchemy import or_, and_, not_      #Ash part
 from sqlalchemy.sql.expression import func
 
-app = Flask(__name__, static_folder='frontend/static')  
+app = Flask(__name__, static_folder='frontend/static')
+
+@app.route('/media/<path:filename>')
+def media_files(filename):
+    # “static” folder here is <project>/static
+    return send_from_directory(os.path.join(BASE_DIR, 'static'), filename)
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
 project_root = os.path.abspath(os.path.dirname(__file__))
 template_paths = [
     os.path.join(project_root, 'templates'),         
@@ -42,9 +47,6 @@ template_paths = [
 
 ]
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
 app.jinja_loader = FileSystemLoader(template_paths)
 app.config['SECRET_KEY'] = 'ForMchat1234'
 app.config['SESSION_PERMANENT'] = True
@@ -53,10 +55,9 @@ app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///C:/Users/user/Projects/ForMchat/instance/users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['STATIC_FOLDER'] = os.path.join(BASE_DIR, 'static')
-app.config['DEFAULT_AVATAR_PATH'] = os.path.join(app.config['STATIC_FOLDER'], 'images/default_avatar.jpg')
+app.config['DEFAULT_AVATAR_PATH'] = os.path.join(app.static_folder, 'images/default_avatar.jpg')
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'} 
-app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'uploads/user_avatars')
-
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads', 'user_avatars')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 metadata = MetaData()
@@ -879,7 +880,8 @@ def complete_profile():
                     img.thumbnail((500, 500))
                     img.save(upload_path, 'JPEG', quality=85)
                     
-                    user.avatar = f"uploads/user_avatars/{filename}"
+                    user.avatar = filename  
+
 
             user.sex = request.form.get('sex')
             user.race = request.form.get('race')
