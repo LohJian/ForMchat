@@ -2,6 +2,41 @@
 {% block title %}{{ user.username }}'s Profile{% endblock %}
 
 {% block content %}
+
+<style>
+  .flash-messages {
+    margin-bottom: 20px;
+  }
+
+  .alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
+
+  .alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
+</style>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
 <div class="profile-container">
     <div class="profile-header">
         {% if user.avatar and 'default_avatar.jpg' not in user.avatar %}
