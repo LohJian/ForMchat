@@ -452,7 +452,7 @@ def send_verification_email(to_email):
     sender_password ="ickx ujbm ggmu iggr" 
 
     subject = "Verify your email - ForMchat"
-    verification_link = f"http://localhost:5000/verify?email={to_email}"
+    verification_link = f"http://miniIT2025.pythonanywhere.com/verify?email={to_email}"
     body = f"""
     <html>
       <body>
@@ -490,7 +490,7 @@ def send_reset_password_email(to_email):
     sender_password = "ickx ujbm ggmu iggr"
 
     subject = "Reset your password - ForMchat"
-    reset_link = f"http://localhost:5000/reset_password?email={to_email}"
+    reset_link = f"http://miniIT2025.pythonanywhere.com/reset_password?email={to_email}"
     body = f"""
      <html><body>
         <p>Hello,</p>
@@ -520,7 +520,7 @@ def send_approval_email(to_email):
     sender_password = "ickx ujbm ggmu iggr"
 
     subject = "Your ForMchat Profile Has Been Approved"
-    login_link = "http://localhost:5000/login"
+    login_link = "http://miniIT2025.pythonanywhere.com/login"
     body = f"""
     <html>
       <body>
@@ -559,7 +559,7 @@ def send_rejection_email(to_email):
     sender_password = "ickx ujbm ggmu iggr"
 
     subject = "Your ForMchat Profile Was Rejected"
-    update_link = "http://localhost:5000/complete_profile?email=" + to_email
+    update_link = "http://miniIT2025.pythonanywhere.com/complete_profile?email=" + to_email
     body = f"""
     <html>
       <body>
@@ -598,7 +598,7 @@ def send_match_email(to_email, match_name):
     sender_password = "ickx ujbm ggmu iggr"
 
     subject = "You Have a New Match on ForMchat!"
-    login_link = "http://localhost:5000/login"
+    login_link = "http://miniIT2025.pythonanywhere.com/login"
     body = f"""
     <html>
       <body>
@@ -937,22 +937,18 @@ def show():
 def show_matches():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     current_user = User.query.get(session['user_id'])
-    
-    reacted_ids = db.session.query(
-        or_(
-            Interested.liked_id,
-            Dislike.disliked_id
-        )
-    ).filter(
-        or_(
-            Interested.liker_id == current_user.id,
-            Dislike.disliker_id == current_user.id
-        )
-    ).distinct().all()
-    
-    reacted_ids = [id[0] for id in reacted_ids] if reacted_ids else []
+
+    liked_ids = db.session.query(Interested.liked_id).filter(
+        Interested.liker_id == current_user.id
+    ).all()
+
+    disliked_ids = db.session.query(Dislike.disliked_id).filter(
+        Dislike.disliker_id == current_user.id
+    ).all()
+
+    reacted_ids = [row[0] for row in liked_ids + disliked_ids]
 
     match = User.query.filter(
         User.id != current_user.id,
@@ -961,7 +957,7 @@ def show_matches():
     ).order_by(func.random()).first()
 
     interested_users = User.query.join(
-        Interested, 
+        Interested,
         User.id == Interested.liked_id
     ).filter(
         Interested.liker_id == current_user.id
