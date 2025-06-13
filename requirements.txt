@@ -1,10 +1,10 @@
 Flask
-Flask_SQLAlchemy
-Pillow
-gunicorn
 Flask-SQLAlchemy
 Flask-Migrate
+Pillow
 Jinja2
 SQLAlchemy
 Werkzeug
 APScheduler
+gunicorn
+pytz
