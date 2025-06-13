@@ -14,8 +14,8 @@ from jinja2 import FileSystemLoader
 from sqlalchemy import Column, Integer, ForeignKey, MetaData, create_engine
 from sqlalchemy.orm import relationship
 from PIL import Image
-           
-import smtplib      #Yuzhe part  
+
+import smtplib      #Yuzhe part
 import uuid
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -29,34 +29,34 @@ import atexit
 from sqlalchemy import or_, and_, not_      #Ash part
 from sqlalchemy.sql.expression import func
 
-app = Flask(__name__, static_folder='frontend/static')
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+app = Flask(__name__, static_folder='frontend/static', instance_relative_config=True)
 
 @app.route('/media/<path:filename>')
 def media_files(filename):
     # “static” folder here is <project>/static
     return send_from_directory(os.path.join(BASE_DIR, 'static'), filename)
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
 
 project_root = os.path.abspath(os.path.dirname(__file__))
 template_paths = [
-    os.path.join(project_root, 'templates'),         
-    os.path.join(project_root, 'frontend/templates'),    
-    os.path.join(project_root, 'ash/templates'),    
-    os.path.join(project_root, 'website 2/templates'),   
-    os.path.join(project_root, 'website/templates')   
+    os.path.join(project_root, 'templates'),
+    os.path.join(project_root, 'frontend/templates'),
+    os.path.join(project_root, 'ash/templates'),
+    os.path.join(project_root, 'website 2/templates'),
+    os.path.join(project_root, 'website/templates')
 
 ]
-
 app.jinja_loader = FileSystemLoader(template_paths)
 app.config['SECRET_KEY'] = 'ForMchat1234'
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
-app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///C:/Users/user/Projects/ForMchat/instance/users.db'
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'instance', 'users.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['STATIC_FOLDER'] = os.path.join(BASE_DIR, 'static')
 app.config['DEFAULT_AVATAR_PATH'] = os.path.join(app.static_folder, 'images/default_avatar.jpg')
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'} 
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads', 'user_avatars')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
@@ -1061,4 +1061,6 @@ def inject_current_user():
     return dict(current_user=None)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000) 
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True, port=5000)
