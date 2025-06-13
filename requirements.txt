@@ -1,0 +1,10 @@
+Flask
+Flask_SQLAlchemy
+Pillow
+gunicorn
+Flask-SQLAlchemy
+Flask-Migrate
+Jinja2
+SQLAlchemy
+Werkzeug
+APScheduler
