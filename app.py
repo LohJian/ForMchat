@@ -452,7 +452,7 @@ def send_verification_email(to_email):
     sender_password ="ickx ujbm ggmu iggr" 
 
     subject = "Verify your email - ForMchat"
-    verification_link = f"http://miniIT2025.pythonanywhere.com/verify?email={to_email}"
+    verification_link = f"http://https://formchat.onrender.com/verify?email={to_email}"
     body = f"""
     <html>
       <body>
@@ -490,7 +490,7 @@ def send_reset_password_email(to_email):
     sender_password = "ickx ujbm ggmu iggr"
 
     subject = "Reset your password - ForMchat"
-    reset_link = f"http://miniIT2025.pythonanywhere.com/reset_password?email={to_email}"
+    reset_link = f"https://formchat.onrender.com/reset_password?email={to_email}"
     body = f"""
      <html><body>
         <p>Hello,</p>
@@ -520,7 +520,7 @@ def send_approval_email(to_email):
     sender_password = "ickx ujbm ggmu iggr"
 
     subject = "Your ForMchat Profile Has Been Approved"
-    login_link = "http://miniIT2025.pythonanywhere.com/login"
+    login_link = "https://formchat.onrender.com/login"
     body = f"""
     <html>
       <body>
@@ -559,7 +559,7 @@ def send_rejection_email(to_email):
     sender_password = "ickx ujbm ggmu iggr"
 
     subject = "Your ForMchat Profile Was Rejected"
-    update_link = "http://miniIT2025.pythonanywhere.com/complete_profile?email=" + to_email
+    update_link = "https://formchat.onrender.com/complete_profile?email=" + to_email
     body = f"""
     <html>
       <body>
@@ -598,7 +598,7 @@ def send_match_email(to_email, match_name):
     sender_password = "ickx ujbm ggmu iggr"
 
     subject = "You Have a New Match on ForMchat!"
-    login_link = "http://miniIT2025.pythonanywhere.com/login"
+    login_link = "https://formchat.onrender.com/login"
     body = f"""
     <html>
       <body>
