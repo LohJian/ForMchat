@@ -452,7 +452,7 @@ def send_verification_email(to_email):
     sender_password ="ickx ujbm ggmu iggr" 
 
     subject = "Verify your email - ForMchat"
-    verification_link = f"http://https://formchat.onrender.com/verify?email={to_email}"
+    verification_link = f"https://formchat.onrender.com/verify?email={to_email}"
     body = f"""
     <html>
       <body>
